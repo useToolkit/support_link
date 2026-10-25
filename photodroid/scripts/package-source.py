@@ -26,6 +26,7 @@ info = '\n'.join([
     f"Upstream commit: {os.environ['UPSTREAM_COMMIT']}",
     f"Recipe commit: {os.environ.get('GITHUB_SHA', 'local-validation')}",
     f'Korean patch SHA-256: {patch_hash}',
+    f"Google Fonts commit: {os.environ['FONT_COMMIT']}",
     f"NanumGothic SHA-256: {os.environ['FONT_SHA256']}",
     f"Font license SHA-256: {os.environ['FONT_LICENSE_SHA256']}",
     f"Rust: {os.environ['RUST_VERSION']}; JDK: 17; Gradle: {os.environ['GRADLE_VERSION']}",
@@ -36,6 +37,9 @@ info = '\n'.join([
     'No private signing or backup-decryption key is included.',
     '',
 ])
+reuse_info = Path(os.environ.get('RUNNER_TEMP', '/tmp')) / 'native-reuse-info.txt'
+if reuse_info.is_file():
+    info += '\n' + reuse_info.read_text(encoding='utf-8')
 (dist / 'BUILD-INFO.txt').write_text(info, encoding='utf-8')
 
 def add_file(archive, path, name):

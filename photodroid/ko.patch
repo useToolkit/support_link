@@ -24,7 +24,7 @@ index ca6f33f..55a49fa 100644
  
 diff --git a/README.ko.md b/README.ko.md
 new file mode 100644
-index 0000000..c2fc062
+index 0000000..d926b0b
 --- /dev/null
 +++ b/README.ko.md
 @@ -0,0 +1,56 @@
@@ -34,13 +34,13 @@ index 0000000..c2fc062
 +
 +## 설치
 +
-+1. GitHub 릴리스에서 `PhotoDroid-KO-0.3.0-ko.1-arm64.apk`를 휴대폰에 받습니다.
++1. GitHub 릴리스에서 `PhotoDroid-KO-0.3.0-ko.2-arm64.apk`를 휴대폰에 받습니다.
 +2. 내려받은 APK를 열고 Android가 요청하는 경우 해당 브라우저 또는 파일 앱의 **이 출처 허용**을 켭니다.
 +3. **설치**를 누른 뒤 **포토드로이드**를 실행합니다. 최초 실행 시 한국어가 기본으로 선택됩니다.
 +
 +- 요구 환경: Android 10(API 29) 이상, ARM64 기기.
 +- 패키지 ID: `kr.usetoolkit.photodroid`. 원본 PhotoDroid와 별도로 설치됩니다.
-+- 버전: `0.3.0-ko.1` / 버전 코드 `30001`.
++- 버전: `0.3.0-ko.2` / 버전 코드 `30002`.
 +- 실제 기기에서의 호환성은 기기의 그래픽 드라이버와 메모리에 따라 달라질 수 있습니다. 빌드 및 자동 테스트 결과는 GitHub Actions에서 확인할 수 있습니다.
 +
 +## 처음 편집하기
@@ -97,7 +97,7 @@ index 176da2d..5c4d7bd 100644
  
  **PhotoDroid** ([`Idea-atmosphere/PhotoDroid`](https://github.com/Idea-atmosphere/PhotoDroid)) is an open-source Android port of the desktop [PhotoCraft](https://github.com/storytold/photocraft) image and photo editor — a clean-room Adobe Photoshop (PSD/PSB) editor written in pure Rust
 diff --git a/android/app/build.gradle b/android/app/build.gradle
-index 5e98be0..e003870 100644
+index 5e98be0..9dd2d19 100644
 --- a/android/app/build.gradle
 +++ b/android/app/build.gradle
 @@ -19,17 +19,17 @@ def canSignRelease = keystorePath != null && !keystorePath.trim().isEmpty() &&
@@ -105,11 +105,11 @@ index 5e98be0..e003870 100644
  def propVersionCode = project.hasProperty("appVersionCode")
          ? project.property("appVersionCode").toString().toInteger()
 -        : 1
-+        : 30001
++        : 30002
  def propVersionName = project.hasProperty("appVersionName")
          ? project.property("appVersionName").toString()
 -        : '0.3.0'
-+        : '0.3.0-ko.1'
++        : '0.3.0-ko.2'
  
  android {
      namespace 'IA.photodroid'

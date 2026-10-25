@@ -15,7 +15,9 @@ yes | "$sdkmanager_bin" --sdk_root="$photodroid_sdk" --licenses > "$RUNNER_TEMP/
 sdk_license_status=${PIPESTATUS[1]}
 set -e
 test "$sdk_license_status" -eq 0 || { echo 'Android SDK license acceptance failed.'; exit 1; }
-"$sdkmanager_bin" --sdk_root="$photodroid_sdk" "platforms;android-$SDK_VERSION" "build-tools;$BUILD_TOOLS_VERSION" "ndk;$NDK_VERSION"
+packages=("platforms;android-$SDK_VERSION" "build-tools;$BUILD_TOOLS_VERSION")
+if [[ "${1:-}" != '--sdk-only' ]]; then packages+=("ndk;$NDK_VERSION"); fi
+"$sdkmanager_bin" --sdk_root="$photodroid_sdk" "${packages[@]}"
 {
   printf 'ANDROID_HOME=%s\n' "$photodroid_sdk"
   printf 'ANDROID_SDK_ROOT=%s\n' "$photodroid_sdk"

@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: photodroid-ko-release
@@ -24,45 +25,33 @@ env:
 
 jobs:
   tests:
-    name: Korean font, protocol and mobile UI tests
+    name: Validate tested editor source
     if: github.ref == 'refs/heads/photodroid-ko'
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Prepare the pinned source and verified Korean font
         run: bash photodroid/scripts/prepare-source.sh
-      - name: Install the pinned Rust toolchain
+      - name: Verify the exact editor source against the 77-test passing build
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           source photodroid/scripts/config.sh
-          rustup toolchain install "$RUST_VERSION" --profile minimal
-      - name: Install host UI build dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends pkg-config libxkbcommon-dev libwayland-dev libegl1-mesa-dev libxcb-shape0-dev libxcb-xfixes0-dev libvulkan1 mesa-vulkan-drivers
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            source/target
-          key: photodroid-host-${{ runner.os }}-rust1.99.1-${{ hashFiles('source/Cargo.lock', 'photodroid/ko.patch') }}
-          restore-keys: photodroid-host-${{ runner.os }}-rust1.99.1-
-      - name: Run the targeted tests
-        run: bash photodroid/scripts/test-targeted.sh
-      - name: Keep the test log
+          python3 photodroid/scripts/reuse-verified-native.py --source-dir "$SOURCE_DIR" --check-only
+      - name: Keep the source comparison and test provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: PhotoDroid-ko-test-log
-          path: ${{ runner.temp }}/photodroid-tests.log
+          name: PhotoDroid-ko-source-validation
+          path: ${{ runner.temp }}/native-reuse-info.txt
           if-no-files-found: ignore
           retention-days: 30
 
   apk:
-    name: Signed arm64 APK and complete source archive
+    name: Repackage verified arm64 engine and sign APK
     if: github.ref == 'refs/heads/photodroid-ko'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
@@ -85,50 +74,55 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Install the pinned Android SDK and NDK
-        run: bash photodroid/scripts/install-android.sh
-      - name: Install the pinned Rust toolchain
+      - name: Install the pinned Android SDK for packaging
+        run: bash photodroid/scripts/install-android.sh --sdk-only
+      - name: Verify source and reuse the checksum-verified 16 KB native library
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           source photodroid/scripts/config.sh
-          rustup toolchain install "$RUST_VERSION" --profile minimal --target aarch64-linux-android
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            source/target
-          key: photodroid-arm64-${{ runner.os }}-rust1.99.1-ndk27-16k-${{ hashFiles('source/Cargo.lock', 'photodroid/ko.patch') }}
-          restore-keys: photodroid-arm64-${{ runner.os }}-rust1.99.1-ndk27-16k-
-      - name: Build and strip the native library with 16 KB alignment
-        run: bash photodroid/scripts/build-native.sh
+          python3 photodroid/scripts/reuse-verified-native.py --source-dir "$SOURCE_DIR"
       - name: Package the complete corresponding source
         run: |
           source photodroid/scripts/config.sh
           python3 photodroid/scripts/package-source.py
-      - name: Sign, assemble and verify the APK
+      - name: Prepare an authenticated recipient for the existing signing key
+        id: signing_import
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: bash photodroid/scripts/sign-package.sh
-      - name: Keep only the encrypted initial signing-key backup
-        if: always()
+        run: bash photodroid/scripts/prepare-signing-import.sh
+      - name: Share only this job's public recipient certificate
+        if: steps.signing_import.outputs.needs_import == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: PhotoDroid-signing-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          name: PhotoDroid-signing-recipient-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/photodroid-signing-backup/PhotoDroid-signing-backup.cms
-            ${{ runner.temp }}/photodroid-signing-backup/BACKUP-INFO.txt
-          if-no-files-found: ignore
-          retention-days: 90
+            ${{ runner.temp }}/signing-import/recipient-public.pem
+            ${{ runner.temp }}/signing-import/recipient-info.json
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
+      - name: Sign, assemble and verify the APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash photodroid/scripts/sign-package.sh
+      - name: Remove the temporary recipient private key
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/signing-import"
       - name: Keep the verified release files
         uses: actions/upload-artifact@v4
         with:
           name: PhotoDroid-ko-release-files
           path: |
-            dist/PhotoDroid-KO-0.3.0-ko.1-arm64.apk
-            dist/PhotoDroid-KO-0.3.0-ko.1-source.zip
+            dist/PhotoDroid-KO-0.3.0-ko.2-arm64.apk
+            dist/PhotoDroid-KO-0.3.0-ko.2-source.zip
             dist/BUILD-INFO.txt
             dist/APK-VERIFICATION.txt
             dist/SHA256SUMS
@@ -137,7 +131,7 @@ jobs:
           retention-days: 90
 
   release:
-    name: Publish only after the APK and tests pass
+    name: Publish the verified packaging update
     needs: [tests, apk]
     if: github.ref == 'refs/heads/photodroid-ko'
     runs-on: ubuntu-24.04
