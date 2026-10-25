@@ -1,0 +1,1979 @@
+diff --git a/ATTRIBUTION.md b/ATTRIBUTION.md
+index 26eca62..5843821 100644
+--- a/ATTRIBUTION.md
++++ b/ATTRIBUTION.md
+@@ -27,6 +27,7 @@ next to them.
+ | `crates/ui-egui/src/i18n/sr.tsv` | Serbian (Latin, Ekavian) UI translations | PhotoCraft contributors | Original translations of PhotoCraft's English labels | MIT OR Apache-2.0, [`LICENSE-translations.txt`](crates/ui-egui/src/i18n/LICENSE-translations.txt) |
+ | `assets/fonts/Inter-Regular.ttf`, `Inter-Medium.ttf`, `Inter-SemiBold.ttf` | Inter 4.001 (UI font) | The Inter Project Authors (Rasmus Andersson) | <https://github.com/rsms/inter> | SIL OFL 1.1, [`assets/fonts/OFL-Inter.txt`](assets/fonts/OFL-Inter.txt) |
+ | `assets/fonts/JetBrainsMono-Regular.ttf` | JetBrains Mono 2.305 (numeric font) | The JetBrains Mono Project Authors | <https://github.com/JetBrains/JetBrainsMono> | SIL OFL 1.1, [`assets/fonts/OFL-JetBrainsMono.txt`](assets/fonts/OFL-JetBrainsMono.txt) |
++| `assets/fonts/NanumGothic-Regular.ttf` | NanumGothic Regular (Korean UI and document text) | NHN Corporation / Naver Nanum | <https://github.com/google/fonts/tree/main/ofl/nanumgothic> | SIL OFL 1.1, [`assets/fonts/OFL-NanumGothic.txt`](assets/fonts/OFL-NanumGothic.txt) |
+ | `assets/icons/*.svg` except `slice-knife.svg`, `sampler.svg`, `artboard.svg`, `perspective-crop.svg`, `frame-placeholder.svg`, `gradient.svg`, `type-mask.svg`, `type-mask-vertical.svg`, `clip-below.svg`, `clip-release.svg`, `layer-mask.svg`, `adjustment-layer.svg`, `brush-replace.svg`, `quick-selection.svg`, `eraser-background.svg`, `eraser-magic.svg`, `lasso-magnetic.svg`, `direct-select.svg`, `convert-point.svg`, `pen-add-anchor.svg`, `pen-delete-anchor.svg`, `pen-freeform.svg`, `pen-curvature.svg`, `bandage-sparkle.svg`, `painting-symmetry.svg`, `symmetry-*.svg` and `marquee-{row,column}.svg` (113 files; `star-filled.svg` is `star.svg` with a solid fill) | Lucide icons | Lucide Icons and Contributors | <https://github.com/lucide-icons/lucide> (`icons/<name>.svg`; `align-*` are now named `text-align-*` upstream) | ISC, [`assets/icons/LICENSE-lucide.txt`](assets/icons/LICENSE-lucide.txt) |
+ | `assets/icons/{check,chevron-down,chevron-left,chevron-right,chevron-up,chevrons-left,chevrons-right,circle,clock,compass,info,link,link-2,lock,minus,monitor,moon,move,navigation,plus,search,square,trash,triangle,type,x,zoom-in}.svg` | Lucide icons derived from Feather (subset of the row above) | Cole Bemis (Feather), Lucide Contributors | <https://github.com/feathericons/feather> via Lucide | MIT (Feather) and ISC (Lucide), [`assets/icons/LICENSE-lucide.txt`](assets/icons/LICENSE-lucide.txt) |
+ | `assets/icons/slice-knife.svg` | Slice tool glyph | PhotoCraft contributors | Original work | MIT OR Apache-2.0 |
+diff --git a/Cargo.lock b/Cargo.lock
+index ca6f33f..55a49fa 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3945,6 +3945,7 @@ dependencies = [
+  "photocraft-io",
+  "photocraft-ui-egui",
+  "ron",
++ "serde_json",
+  "winit",
+ ]
+ 
+diff --git a/README.ko.md b/README.ko.md
+new file mode 100644
+index 0000000..c2fc062
+--- /dev/null
++++ b/README.ko.md
+@@ -0,0 +1,56 @@
++# 포토드로이드 한국어판
++
++PhotoDroid를 기반으로 만든 Android용 사진·PSD 편집기입니다. 한국어 메뉴, 내장 한글 글꼴, 휴대폰 키보드를 이용한 문자 입력을 제공합니다. Adobe의 공식 제품이 아니며 Adobe Photoshop이나 Firefly 서비스를 포함하지 않습니다.
++
++## 설치
++
++1. GitHub 릴리스에서 `PhotoDroid-KO-0.3.0-ko.1-arm64.apk`를 휴대폰에 받습니다.
++2. 내려받은 APK를 열고 Android가 요청하는 경우 해당 브라우저 또는 파일 앱의 **이 출처 허용**을 켭니다.
++3. **설치**를 누른 뒤 **포토드로이드**를 실행합니다. 최초 실행 시 한국어가 기본으로 선택됩니다.
++
++- 요구 환경: Android 10(API 29) 이상, ARM64 기기.
++- 패키지 ID: `kr.usetoolkit.photodroid`. 원본 PhotoDroid와 별도로 설치됩니다.
++- 버전: `0.3.0-ko.1` / 버전 코드 `30001`.
++- 실제 기기에서의 호환성은 기기의 그래픽 드라이버와 메모리에 따라 달라질 수 있습니다. 빌드 및 자동 테스트 결과는 GitHub Actions에서 확인할 수 있습니다.
++
++## 처음 편집하기
++
++**사진 열기:** 시작 안내의 **사진 열기** 또는 **메뉴 → 파일 → 열기**에서 사진이나 PSD를 선택합니다.
++
++**도구 선택:** 아래쪽 도구 모음을 옆으로 밀어 원하는 도구를 고릅니다. 캔버스에서 두 손가락으로 확대하거나 이동할 수 있습니다. 위쪽 **패널** 버튼에서 레이어 등 필요한 패널을 엽니다.
++
++**한글 쓰기:** 문자 도구로 캔버스를 누르면 **한글·문자 입력** 창이 열립니다. 휴대폰 키보드로 입력하고 **삽입**을 누릅니다. 입력 내용은 현재 문자 커서 위치에 들어가며 선택된 글자가 있으면 바꿉니다. 입력창을 다시 열려면 문자 편집 상태에서 메뉴의 **한글·문자 입력**을 선택합니다. **취소**는 입력 내용을 적용하지 않습니다. 줄바꿈도 전달됩니다.
++
++**저장:** **메뉴 → 파일 → 저장**, **다른 이름으로 저장** 또는 **내보내기**를 사용합니다. 결과는 **내 파일 → 다운로드 → PhotoDroid**에서 찾습니다. 원본이 다른 폴더에 있다면 그 원본 위치를 덮어쓰지 않고 이 다운로드 폴더에 결과를 저장합니다.
++
++## 이번 한국어판의 변경
++
++- 첫 실행의 기본 언어를 한국어로 지정했습니다. 이후 설정에서 바꾼 언어는 유지합니다.
++- UI와 문서의 문자 렌더링에 나눔고딕을 포함했습니다. 기기에 한글 시스템 글꼴이 없는 경우에도 사용할 수 있습니다.
++- Android의 기본 문자 입력창에서 조합을 마친 한글을 편집기로 전달합니다.
++- 작은 휴대폰 화면에서 위쪽 버튼이 넘치지 않도록 보조 입력 도구를 메뉴에 배치했습니다.
++- 한국어 메뉴의 긴 이름을 화면 폭에 맞추고, 키보드가 나타날 때 메뉴 높이를 조정했습니다.
++- 안내와 파일 처리 메시지를 한국어로 바꾸고 저장 완료 위치를 표시합니다.
++- 같은 이름으로 다시 저장할 때 새 파일을 완성한 다음 이전 앱 저장본을 삭제하도록 순서를 수정했습니다.
++
++## 기능과 범위
++
++원본의 레이어, 마스크, 문자, 브러시, 선택·변형 도구와 PSD/PSB 및 일반 이미지 형식 처리 코드를 사용합니다. 복잡한 Photoshop 문서는 편집 효과나 글꼴 차이 때문에 원본과 동일하게 표시되지 않을 수 있습니다. 생성형 채우기 등 Adobe의 온라인 AI 서비스는 포함하지 않습니다.
++
++Android 포트의 다음 제한은 남아 있습니다.
++
++- 파일 배치(임베디드/링크), 스크립트·프리셋·메모 가져오기는 아직 연결되지 않았습니다.
++- 저장 폴더를 직접 고르는 기능은 없으며 `Download/PhotoDroid`를 사용합니다.
++- 이미지 클립보드, 펜 기울기·지우개, TalkBack 지원에는 제한이 있습니다.
++- 큰 PSD나 많은 레이어는 처리에 시간이 걸릴 수 있습니다. 레이어 순서는 메뉴의 정렬 명령으로 바꿉니다.
++- 이 릴리스는 ARM64 전용입니다. x86 에뮬레이터나 32비트 ARM 기기에는 설치되지 않습니다.
++
++## 소스와 라이선스
++
++- 원본: [Idea-atmosphere/PhotoDroid](https://github.com/Idea-atmosphere/PhotoDroid), 고정 커밋 `99606e841af9d4cfb338b8c93a3694dad14f8583`.
++- 편집 엔진: [storytold/photocraft](https://github.com/storytold/photocraft).
++- 소스 라이선스 및 제3자 고지는 저장소의 LICENSE 파일들과 `ATTRIBUTION.md`를 확인하세요.
++- 나눔고딕: SIL Open Font License 1.1, `assets/fonts/OFL-NanumGothic.txt`.
++- 한국어판 빌드: [useToolkit/support_link의 photodroid-ko 브랜치](https://github.com/useToolkit/support_link/tree/photodroid-ko). 고정 원본과 패치를 적용한 전체 소스 ZIP을 APK와 함께 제공합니다.
++
++앱 업데이트에는 동일한 서명 키가 필요합니다. 빌드 담당자는 개인 서명 백업을 보관하고 후속 릴리스에 같은 키를 사용해야 합니다.
+diff --git a/README.md b/README.md
+index 176da2d..5c4d7bd 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,7 @@
+ # PhotoDroid: PhotoCraft for Android
+ 
++> Korean Android variant: see [한국어 설치·사용 안내](README.ko.md). This variant uses the separate package `kr.usetoolkit.photodroid` and saves exports under `Download/PhotoDroid`.
++
+ **English** | [فارسی](README.fa.md)
+ 
+ **PhotoDroid** ([`Idea-atmosphere/PhotoDroid`](https://github.com/Idea-atmosphere/PhotoDroid)) is an open-source Android port of the desktop [PhotoCraft](https://github.com/storytold/photocraft) image and photo editor — a clean-room Adobe Photoshop (PSD/PSB) editor written in pure Rust
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index 5e98be0..e003870 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -19,17 +19,17 @@ def canSignRelease = keystorePath != null && !keystorePath.trim().isEmpty() &&
+ 
+ def propVersionCode = project.hasProperty("appVersionCode")
+         ? project.property("appVersionCode").toString().toInteger()
+-        : 1
++        : 30001
+ def propVersionName = project.hasProperty("appVersionName")
+         ? project.property("appVersionName").toString()
+-        : '0.3.0'
++        : '0.3.0-ko.1'
+ 
+ android {
+     namespace 'IA.photodroid'
+     compileSdk 35
+ 
+     defaultConfig {
+-        applicationId 'IA.photodroid'
++        applicationId 'kr.usetoolkit.photodroid'
+         // Storage Access Framework and MediaStore Downloads (no storage permissions) need 29.
+         minSdk 29
+         targetSdk 35
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index b6001fc..adee063 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -10,6 +10,7 @@
+         android:hasCode="true"
+         android:icon="@mipmap/ic_launcher"
+         android:label="@string/app_name"
++        android:description="@string/app_description"
+         android:supportsRtl="true"
+         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+ 
+diff --git a/android/app/src/main/java/IA/photodroid/PhotoCraftActivity.java b/android/app/src/main/java/IA/photodroid/PhotoCraftActivity.java
+index ef72c94..07856ff 100644
+--- a/android/app/src/main/java/IA/photodroid/PhotoCraftActivity.java
++++ b/android/app/src/main/java/IA/photodroid/PhotoCraftActivity.java
+@@ -1,5 +1,6 @@
+ package IA.photodroid;
+ 
++import android.app.AlertDialog;
+ import android.app.Dialog;
+ import android.app.NativeActivity;
+ import android.content.ContentResolver;
+@@ -9,32 +10,27 @@ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.content.res.Resources;
+ import android.database.Cursor;
+-import android.graphics.Color;
+ import android.graphics.Insets;
+-import android.graphics.Typeface;
+-import android.graphics.drawable.ColorDrawable;
+-import android.graphics.drawable.GradientDrawable;
+ import android.net.Uri;
+ import android.os.Build;
+ import android.os.Bundle;
+ import android.os.Environment;
+-import android.os.LocaleList;
+ import android.os.ParcelFileDescriptor;
+ import android.provider.MediaStore;
+ import android.provider.OpenableColumns;
++import android.text.InputType;
+ import android.util.DisplayMetrics;
+ import android.util.TypedValue;
+ import android.view.DisplayCutout;
+ import android.view.Gravity;
+ import android.view.View;
+-import android.view.ViewGroup;
+ import android.view.Window;
+ import android.view.WindowInsets;
+ import android.view.WindowManager;
+ import android.view.inputmethod.InputMethodManager;
+-import android.widget.LinearLayout;
+-import android.widget.ScrollView;
+-import android.widget.TextView;
++import android.widget.EditText;
++import android.widget.FrameLayout;
++import android.widget.Toast;
+ 
+ import java.io.File;
+ import java.io.FileInputStream;
+@@ -44,7 +40,6 @@ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.util.ArrayList;
+ import java.util.List;
+-import java.util.Locale;
+ import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.concurrent.ExecutorService;
+ import java.util.concurrent.Executors;
+@@ -63,19 +58,20 @@ import java.util.concurrent.atomic.AtomicLong;
+  *            "file" SEP name SEP cachePath  (a picked file copied to app cache, when the provider
+  *                                           gave no descriptor)
+  *            "error" SEP name SEP message   (a picked file that couldn't be copied)
++ *            "text" SEP "" SEP text         (Unicode committed from the native input dialog)
+  *            "done"                         (the picker session is over)
+  *            one event per "poll"; "" when none is waiting
+  */
+ public class PhotoCraftActivity extends NativeActivity {
+     private static final char SEP = '\u001f';
+     private static final int REQUEST_OPEN = 0x5043;
+-    private static final String EXPORT_FOLDER = Environment.DIRECTORY_DOWNLOADS + "/PhotoCraft";
++    private static final String EXPORT_FOLDER = Environment.DIRECTORY_DOWNLOADS + "/PhotoDroid";
+     private static final String PREFS_NAME = "photodroid_prefs";
+-    private static final String KEY_DONT_SHOW_WELCOME = "dont_show_donate_dialog";
+-    private static final String DONATE_URL = "https://idea-atmosphere.github.io/Nothing/designs/minimal.html";
++    private static final String KEY_DONT_SHOW_WELCOME = "korean_quick_start_seen_v1";
+ 
+     private static volatile boolean welcomeShownInProcess = false;
+     private Dialog welcomeDialog;
++    private Dialog textInputDialog;
+ 
+     private final ConcurrentLinkedQueue<String> events = new ConcurrentLinkedQueue<>();
+     private final ExecutorService io = Executors.newSingleThreadExecutor(runnable -> {
+@@ -130,7 +126,7 @@ public class PhotoCraftActivity extends NativeActivity {
+         // Picked files that an earlier run didn't get to are stale now.
+         deleteTree(new File(getCacheDir(), "open"));
+ 
+-        // Show the welcome & donation popup on startup unless permanently dismissed.
++        // Explain the editing controls and save location once on a fresh installation.
+         decorView.post(this::maybeShowWelcomePopup);
+     }
+ 
+@@ -169,29 +165,18 @@ public class PhotoCraftActivity extends NativeActivity {
+             }
+         }
+         welcomeDialog = null;
++        if (textInputDialog != null && textInputDialog.isShowing()) {
++            try {
++                textInputDialog.dismiss();
++            } catch (RuntimeException ignored) {
++            }
++        }
++        textInputDialog = null;
+         io.shutdownNow();
+         super.onDestroy();
+     }
+ 
+-    // ---- Startup welcome & donation popup ----
+-
+-    private boolean isPersianDeviceLocale() {
+-        Locale locale = null;
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+-            LocaleList sysLocales = Resources.getSystem().getConfiguration().getLocales();
+-            if (!sysLocales.isEmpty()) {
+-                locale = sysLocales.get(0);
+-            }
+-        }
+-        if (locale == null) {
+-            locale = Locale.getDefault();
+-        }
+-        if (locale == null) {
+-            return false;
+-        }
+-        String lang = locale.getLanguage();
+-        return lang != null && lang.toLowerCase(Locale.ROOT).startsWith("fa");
+-    }
++    // ---- First-run editing guide ----
+ 
+     private int dp(int value) {
+         return Math.round(TypedValue.applyDimension(
+@@ -211,225 +196,26 @@ public class PhotoCraftActivity extends NativeActivity {
+         }
+         welcomeShownInProcess = true;
+ 
+-        final boolean isFa = isPersianDeviceLocale();
+-        final String titleText = "PhotoDroid";
+-        final String bodyText = isFa
+-                ? "این برنامه پورت‌شده‌ی غیررسمیِ پروژه PhotoCraft هست برای اندروید.\n\n"
+-                  + "این برنامه کاملاً رایگان هست و اگر دوست داشتید می‌تونید دونیتم کنید و از این لینک، لینک دونیت از دارامت (برای کاربران داخل ایران) و آدرس کیف پول گذاشته شده:"
+-                : "This app is an unofficial Android port of the PhotoCraft project.\n\n"
+-                  + "This app is completely free, and if you'd like, you can donate to support me. Through this link, both a Daramet donation link (for users in Iran) and wallet addresses are provided:";
+-        final String linkCardTitle = isFa
+-                ? "لینک دونیت (دارامت و آدرس کیف پول)"
+-                : "Donate (Daramet & Wallet Address)";
+-        final String thanksText = isFa
+-                ? "از همراهی شما ممنونم."
+-                : "Thank you for your support.";
+-        final String closeLabel = isFa ? "بستن" : "Close";
+-        final String dontShowLabel = isFa ? "دیگر نمایش نده" : "Don't show again";
+-
+-        Dialog dialog = new Dialog(this);
+-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+-        dialog.setCancelable(true);
+-        dialog.setCanceledOnTouchOutside(true);
+-
+-        LinearLayout card = new LinearLayout(this);
+-        card.setOrientation(LinearLayout.VERTICAL);
+-        card.setLayoutDirection(isFa ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+-        int pad = dp(22);
+-        card.setPadding(pad, pad, pad, pad);
+-
+-        GradientDrawable cardBg = new GradientDrawable();
+-        cardBg.setColor(Color.parseColor("#181B22"));
+-        cardBg.setCornerRadius(dp(24));
+-        cardBg.setStroke(dp(1), Color.parseColor("#2D3342"));
+-        card.setBackground(cardBg);
+-
+-        // Header title
+-        TextView titleView = new TextView(this);
+-        titleView.setText(titleText);
+-        titleView.setTextColor(Color.parseColor("#F3F4F6"));
+-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+-        titleView.setTypeface(Typeface.DEFAULT_BOLD);
+-        titleView.setGravity(isFa ? Gravity.RIGHT : Gravity.LEFT);
+-        card.addView(titleView, new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        ));
+-
+-        // Scrollable content area for small screens / landscape mode
+-        ScrollView scrollView = new ScrollView(this);
+-        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                0,
+-                1.0f
+-        );
+-        scrollParams.topMargin = dp(12);
+-        scrollParams.bottomMargin = dp(16);
+-
+-        LinearLayout contentLayout = new LinearLayout(this);
+-        contentLayout.setOrientation(LinearLayout.VERTICAL);
+-
+-        // Main description message
+-        TextView bodyView = new TextView(this);
+-        bodyView.setText(bodyText);
+-        bodyView.setTextColor(Color.parseColor("#D1D5DB"));
+-        bodyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+-        bodyView.setLineSpacing(dp(4), 1.15f);
+-        bodyView.setGravity(isFa ? Gravity.RIGHT : Gravity.LEFT);
+-        bodyView.setTextDirection(isFa ? View.TEXT_DIRECTION_RTL : View.TEXT_DIRECTION_LTR);
+-        contentLayout.addView(bodyView, new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        ));
+-
+-        // Clickable Donation Link Box
+-        LinearLayout linkBox = new LinearLayout(this);
+-        linkBox.setOrientation(LinearLayout.VERTICAL);
+-        int boxPadH = dp(16);
+-        int boxPadV = dp(14);
+-        linkBox.setPadding(boxPadH, boxPadV, boxPadH, boxPadV);
+-        GradientDrawable linkBoxBg = new GradientDrawable();
+-        linkBoxBg.setColor(Color.parseColor("#222838"));
+-        linkBoxBg.setCornerRadius(dp(16));
+-        linkBoxBg.setStroke(dp(1), Color.parseColor("#3B6CF6"));
+-        linkBox.setBackground(linkBoxBg);
+-        linkBox.setClickable(true);
+-        linkBox.setFocusable(true);
+-        linkBox.setOnClickListener(v -> openUrl(DONATE_URL));
+-
+-        TextView linkHeader = new TextView(this);
+-        linkHeader.setText(linkCardTitle);
+-        linkHeader.setTextColor(Color.parseColor("#6B8CFF"));
+-        linkHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+-        linkHeader.setTypeface(Typeface.DEFAULT_BOLD);
+-        linkHeader.setGravity(isFa ? Gravity.RIGHT : Gravity.LEFT);
+-        linkBox.addView(linkHeader, new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        ));
+-
+-        TextView linkUrlView = new TextView(this);
+-        linkUrlView.setText(DONATE_URL);
+-        linkUrlView.setTextColor(Color.parseColor("#F3F4F6"));
+-        linkUrlView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+-        linkUrlView.setGravity(Gravity.LEFT);
+-        linkUrlView.setTextDirection(View.TEXT_DIRECTION_LTR);
+-        LinearLayout.LayoutParams urlParams = new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        );
+-        urlParams.topMargin = dp(4);
+-        linkBox.addView(linkUrlView, urlParams);
+-
+-        LinearLayout.LayoutParams linkBoxParams = new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        );
+-        linkBoxParams.topMargin = dp(14);
+-        linkBoxParams.bottomMargin = dp(14);
+-        contentLayout.addView(linkBox, linkBoxParams);
+-
+-        // Closing thank-you line
+-        TextView thanksView = new TextView(this);
+-        thanksView.setText(thanksText);
+-        thanksView.setTextColor(Color.parseColor("#F3F4F6"));
+-        thanksView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+-        thanksView.setTypeface(Typeface.DEFAULT_BOLD);
+-        thanksView.setGravity(isFa ? Gravity.RIGHT : Gravity.LEFT);
+-        thanksView.setTextDirection(isFa ? View.TEXT_DIRECTION_RTL : View.TEXT_DIRECTION_LTR);
+-        contentLayout.addView(thanksView, new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        ));
+-
+-        scrollView.addView(contentLayout);
+-        card.addView(scrollView, scrollParams);
+-
+-        // Action buttons row (Close / Don't show again)
+-        LinearLayout buttonRow = new LinearLayout(this);
+-        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+-        buttonRow.setGravity(Gravity.CENTER_VERTICAL);
+-
+-        TextView closeBtn = createDialogButton(
+-                closeLabel,
+-                Color.parseColor("#262B38"),
+-                Color.parseColor("#383F52"),
+-                Color.parseColor("#E5E7EB")
+-        );
+-        closeBtn.setOnClickListener(v -> dialog.dismiss());
+-
+-        TextView dontShowBtn = createDialogButton(
+-                dontShowLabel,
+-                Color.parseColor("#3B6CF6"),
+-                Color.parseColor("#3B6CF6"),
+-                Color.parseColor("#FFFFFF")
+-        );
+-        dontShowBtn.setOnClickListener(v -> {
+-            prefs.edit().putBoolean(KEY_DONT_SHOW_WELCOME, true).apply();
+-            dialog.dismiss();
+-        });
+-
+-        LinearLayout.LayoutParams btnParams1 = new LinearLayout.LayoutParams(
+-                0,
+-                ViewGroup.LayoutParams.WRAP_CONTENT,
+-                1.0f
+-        );
+-        LinearLayout.LayoutParams btnParams2 = new LinearLayout.LayoutParams(
+-                0,
+-                ViewGroup.LayoutParams.WRAP_CONTENT,
+-                1.0f
+-        );
+-        if (isFa) {
+-            btnParams1.leftMargin = dp(6);
+-            btnParams2.rightMargin = dp(6);
+-        } else {
+-            btnParams1.rightMargin = dp(6);
+-            btnParams2.leftMargin = dp(6);
+-        }
+-        buttonRow.addView(closeBtn, btnParams1);
+-        buttonRow.addView(dontShowBtn, btnParams2);
+-
+-        card.addView(buttonRow, new LinearLayout.LayoutParams(
+-                ViewGroup.LayoutParams.MATCH_PARENT,
+-                ViewGroup.LayoutParams.WRAP_CONTENT
+-        ));
+-
+-        dialog.setContentView(card);
+-        Window dlgWindow = dialog.getWindow();
+-        if (dlgWindow != null) {
+-            dlgWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+-            DisplayMetrics dm = getResources().getDisplayMetrics();
+-            int maxWidth = Math.min(dm.widthPixels - dp(36), dp(440));
+-            dlgWindow.setLayout(maxWidth, ViewGroup.LayoutParams.WRAP_CONTENT);
+-        }
+-
++        // The platform dialog scrolls long text and keeps its buttons reachable on a small
++        // screen, in landscape, and with larger accessibility font settings.
++        AlertDialog dialog = new AlertDialog.Builder(this)
++                .setTitle(R.string.welcome_title)
++                .setMessage(R.string.welcome_message)
++                .setPositiveButton(R.string.welcome_start, (d, which) ->
++                        prefs.edit().putBoolean(KEY_DONT_SHOW_WELCOME, true).apply())
++                .setNeutralButton(R.string.welcome_open, (d, which) -> {
++                    prefs.edit().putBoolean(KEY_DONT_SHOW_WELCOME, true).apply();
++                    launchOpen();
++                })
++                .create();
+         welcomeDialog = dialog;
+         try {
+             dialog.show();
+         } catch (RuntimeException ignored) {
++            // A window that has just stopped must not prevent the native editor from starting.
+         }
+     }
+ 
+-    private TextView createDialogButton(String label, int bgColor, int strokeColor, int textColor) {
+-        TextView btn = new TextView(this);
+-        btn.setText(label);
+-        btn.setTextColor(textColor);
+-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+-        btn.setTypeface(Typeface.DEFAULT_BOLD);
+-        btn.setGravity(Gravity.CENTER);
+-        int padV = dp(11);
+-        int padH = dp(12);
+-        btn.setPadding(padH, padV, padH, padV);
+-        GradientDrawable bg = new GradientDrawable();
+-        bg.setColor(bgColor);
+-        bg.setCornerRadius(dp(14));
+-        bg.setStroke(dp(1), strokeColor);
+-        btn.setBackground(bg);
+-        btn.setClickable(true);
+-        btn.setFocusable(true);
+-        return btn;
+-    }
+-
+     /** Called from Rust. Never throws: failures come back as an "err" reply. */
+     public String photocraftCall(String command, String argument) {
+         try {
+@@ -461,7 +247,7 @@ public class PhotoCraftActivity extends NativeActivity {
+                     softKeyboard("show".equals(argument));
+                     return ok("");
+                 default:
+-                    return err("unknown request " + clean(command));
++                    return err(getString(R.string.error_unknown_request, clean(command)));
+             }
+         } catch (Exception e) {
+             return err(describe(e));
+@@ -480,7 +266,7 @@ public class PhotoCraftActivity extends NativeActivity {
+             try {
+                 startActivityForResult(intent, REQUEST_OPEN);
+             } catch (RuntimeException e) {
+-                events.add(join("error", "", "No file picker is available: " + describe(e)));
++                events.add(join("error", "", getString(R.string.error_file_picker, describe(e))));
+                 events.add("done");
+             }
+         });
+@@ -527,12 +313,12 @@ public class PhotoCraftActivity extends NativeActivity {
+         try {
+             File dir = new File(getCacheDir(), "open");
+             if (!dir.isDirectory() && !dir.mkdirs()) {
+-                throw new IOException("could not create " + dir.getName());
++                throw new IOException(getString(R.string.error_cache_folder));
+             }
+             File target = new File(dir, Long.toString(copies.incrementAndGet()));
+             try (InputStream in = resolver.openInputStream(uri)) {
+                 if (in == null) {
+-                    throw new IOException("the file could not be opened");
++                    throw new IOException(getString(R.string.error_open_file));
+                 }
+                 try (OutputStream out = new FileOutputStream(target)) {
+                     copy(in, out);
+@@ -566,20 +352,20 @@ public class PhotoCraftActivity extends NativeActivity {
+         if (name == null || name.isEmpty()) {
+             name = uri.getLastPathSegment();
+         }
+-        return fileName(name == null || name.isEmpty() ? "picked file" : name);
++        return fileName(name == null || name.isEmpty() ? "가져온 파일" : name);
+     }
+ 
+-    // ---- Saving (Downloads/PhotoCraft through MediaStore) ----
++    // ---- Saving (Downloads/PhotoDroid through MediaStore) ----
+ 
+     /**
+-     * Save the staged file under its name in Downloads/PhotoCraft. The argument is
++     * Save the staged file under its name in Downloads/PhotoDroid. The argument is
+      * name SEP mime SEP stagedPath SEP previousUri, where previousUri is the copy this name was
+      * saved to last (empty if none). Returns the new copy's URI.
+      */
+     private String save(String argument) throws IOException {
+         String[] fields = argument.split(String.valueOf(SEP), -1);
+         if (fields.length != 4) {
+-            throw new IOException("malformed save request");
++            throw new IOException(getString(R.string.error_save_request));
+         }
+         String name = fields[0];
+         String mime = fields[1];
+@@ -594,33 +380,47 @@ public class PhotoCraftActivity extends NativeActivity {
+         pending.put(MediaStore.Downloads.IS_PENDING, 1);
+         Uri row = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, pending);
+         if (row == null) {
+-            throw new IOException("Downloads is not available");
++            throw new IOException(getString(R.string.error_downloads));
+         }
+         try (InputStream in = new FileInputStream(staged);
+              OutputStream out = resolver.openOutputStream(row, "wt")) {
+             if (out == null) {
+-                throw new IOException("could not write " + name);
++                throw new IOException(getString(R.string.error_write_file, name));
+             }
+             copy(in, out);
+         } catch (IOException | RuntimeException e) {
+-            resolver.delete(row, null, null);
++            try {
++                resolver.delete(row, null, null);
++            } catch (RuntimeException ignored) {
++                // Keep the copy failure, rather than replacing it with a cleanup failure.
++            }
++            throw e;
++        }
++
++        // Publish the replacement before removing the previous export. If publishing fails,
++        // the last successful save remains available and only the incomplete replacement is removed.
++        ContentValues published = new ContentValues();
++        published.put(MediaStore.Downloads.IS_PENDING, 0);
++        try {
++            if (resolver.update(row, published, null, null) < 1) {
++                throw new IOException(getString(R.string.error_finish_save, name));
++            }
++        } catch (IOException | RuntimeException e) {
++            try {
++                resolver.delete(row, null, null);
++            } catch (RuntimeException ignored) {
++                // Keep the original exception; a pending replacement can be cleaned by MediaStore.
++            }
+             throw e;
+         }
+ 
+-        // The new copy is complete, so the earlier export of this name can go. Only then does the
+-        // new copy take the plain name (while the old one exists, MediaStore numbers it).
+         if (!previous.isEmpty()) {
+             try {
+                 resolver.delete(Uri.parse(previous), null, null);
+             } catch (RuntimeException ignored) {
+-                // Already gone (the user deleted it): nothing to replace.
++                // Already gone or no longer writable: the new copy is still saved.
+             }
+         }
+-        ContentValues published = new ContentValues();
+-        published.put(MediaStore.Downloads.IS_PENDING, 0);
+-        if (resolver.update(row, published, null, null) < 1) {
+-            throw new IOException("could not finish " + name);
+-        }
+         ContentValues renamed = new ContentValues();
+         renamed.put(MediaStore.Downloads.DISPLAY_NAME, name);
+         try {
+@@ -628,11 +428,16 @@ public class PhotoCraftActivity extends NativeActivity {
+         } catch (RuntimeException ignored) {
+             // The file is saved, under MediaStore's numbered name.
+         }
++        if (!name.startsWith("photocraft-log")) {
++            String actualName = displayName(resolver, row);
++            runOnUiThread(() -> Toast.makeText(this,
++                    getString(R.string.saved_file, actualName), Toast.LENGTH_LONG).show());
++        }
+         return row.toString();
+     }
+ 
+     /**
+-     * Removes any saved diagnostic log (.txt) files from Downloads/PhotoCraft when Debug is turned off.
++     * Removes any saved diagnostic log (.txt) files from Downloads/PhotoDroid when Debug is turned off.
+      */
+     private String deleteLogs(String argument) {
+         ContentResolver resolver = getContentResolver();
+@@ -650,15 +455,16 @@ public class PhotoCraftActivity extends NativeActivity {
+         try {
+             resolver.delete(
+                     MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+-                    MediaStore.Downloads.DISPLAY_NAME + " LIKE ?",
+-                    new String[] {"photocraft-log%"}
++                    MediaStore.Downloads.RELATIVE_PATH + " = ? AND "
++                            + MediaStore.Downloads.DISPLAY_NAME + " LIKE ?",
++                    new String[] {EXPORT_FOLDER + "/", "photocraft-log%"}
+             );
+         } catch (RuntimeException ignored) {
+         }
+         try {
+             File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+             if (downloads != null) {
+-                File folder = new File(downloads, "PhotoCraft");
++                File folder = new File(downloads, "PhotoDroid");
+                 File[] children = folder.listFiles();
+                 if (children != null) {
+                     for (File child : children) {
+@@ -679,13 +485,13 @@ public class PhotoCraftActivity extends NativeActivity {
+ 
+     private String openUrl(String url) {
+         if (!url.startsWith("https://") && !url.startsWith("http://")) {
+-            return err("only web links can be opened");
++            return err(getString(R.string.error_web_link_only));
+         }
+         runOnUiThread(() -> {
+             try {
+                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+             } catch (RuntimeException e) {
+-                events.add(join("error", "", "The link could not be opened: " + describe(e)));
++                events.add(join("error", "", getString(R.string.error_open_link, describe(e))));
+             }
+         });
+         return ok("");
+@@ -896,24 +702,87 @@ public class PhotoCraftActivity extends NativeActivity {
+     }
+ 
+     /**
+-     * Shows or hides the soft keyboard for text being edited. The request is explicit (flags 0).
+-     * winit's own request is implicit, and Android may ignore an implicit request once the user has
+-     * dismissed the keyboard, so typing would not bring it back. For the same reason winit's hide,
+-     * which only takes away a keyboard shown implicitly, can't be relied on to hide this one.
++     * NativeActivity only forwards raw key events; Korean composing input needs an InputConnection.
++     * A native EditText handles composing text, selection and paste, then sends the completed text
++     * to the editor once. This also avoids duplicate partial Hangul syllables in the document.
+      */
+     private void softKeyboard(boolean show) {
+         runOnUiThread(() -> {
++            if (show) {
++                showTextInput();
++                return;
++            }
++            if (textInputDialog != null) {
++                textInputDialog.dismiss();
++            }
+             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+             if (imm == null) {
+                 return;
+             }
+-            View view = getWindow().getDecorView();
+-            if (show) {
+-                imm.showSoftInput(view, 0);
+-            } else {
+-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
++            Window window = getWindow();
++            if (window == null) {
++                return;
++            }
++            View view = getCurrentFocus();
++            if (view == null) {
++                view = window.getDecorView();
++            }
++            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
++        });
++    }
++
++    /** Runs on the Android UI thread. The native editor keeps its insertion point while this is open. */
++    private void showTextInput() {
++        if (isFinishing() || isDestroyed() || (textInputDialog != null && textInputDialog.isShowing())) {
++            return;
++        }
++        EditText input = new EditText(this);
++        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
++        input.setGravity(Gravity.TOP | Gravity.START);
++        input.setMinLines(2);
++        input.setMaxLines(6);
++        input.setHint(R.string.text_input_hint);
++        input.setSelectAllOnFocus(false);
++        FrameLayout content = new FrameLayout(this);
++        content.setPadding(dp(20), dp(4), dp(20), dp(4));
++        content.addView(input, new FrameLayout.LayoutParams(
++                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
++        AlertDialog dialog = new AlertDialog.Builder(this)
++                .setTitle(R.string.text_input_title)
++                .setMessage(R.string.text_input_message)
++                .setView(content)
++                .setPositiveButton(R.string.text_input_insert, (d, which) -> {
++                    String text = input.getText().toString();
++                    if (!text.isEmpty()) {
++                        // This is the last protocol field (Rust splits only twice). Do not use
++                        // join/clean: they intentionally strip line breaks from file names/errors.
++                        events.add("text" + SEP + SEP + text);
++                    }
++                })
++                .setNegativeButton(R.string.text_input_cancel, null)
++                .create();
++        textInputDialog = dialog;
++        dialog.setOnDismissListener(d -> {
++            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
++            if (imm != null) {
++                imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
++            }
++            if (textInputDialog == dialog) {
++                textInputDialog = null;
+             }
+         });
++        input.requestFocus();
++        Window window = dialog.getWindow();
++        if (window != null) {
++            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
++                    | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
++        }
++        try {
++            dialog.show();
++        } catch (RuntimeException e) {
++            textInputDialog = null;
++            events.add(join("error", "", getString(R.string.error_text_input, describe(e))));
++        }
+     }
+ 
+     // ---- Helpers ----
+diff --git a/android/app/src/main/res/values-fa/strings.xml b/android/app/src/main/res/values-fa/strings.xml
+index dcc8bb7..06ecb40 100644
+--- a/android/app/src/main/res/values-fa/strings.xml
++++ b/android/app/src/main/res/values-fa/strings.xml
+@@ -1,10 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-    <string name="app_name">PhotoDroid</string>
+-    <string name="welcome_title">PhotoDroid</string>
+-    <string name="welcome_message">این برنامه پورت‌شده‌ی غیررسمیِ پروژه PhotoCraft برای اندروید است.\n\nاین برنامه کاملاً رایگانه و اگر دوست داشتید می‌تونید ازم حمایت مالی کنید و تو لینک پایین، لینک دونیت از دارمت (برای کاربران داخل ایران) و آدرس کیف پول گذاشته شده:</string>
+-    <string name="welcome_donate_card_title">لینک دونیت (دارمت و آدرس کیف پول)</string>
+-    <string name="welcome_thanks">از همراهی شما ممنونم.</string>
+-    <string name="welcome_close">بستن</string>
+-    <string name="welcome_dont_show_again">دیگه نمایش نده</string>
++    <!-- This personal edition uses Korean Android chrome on every device locale. -->
++    <string name="app_name">포토드로이드</string>
+ </resources>
+diff --git a/android/app/src/main/res/values/strings.xml b/android/app/src/main/res/values/strings.xml
+index afcd6c2..54163a5 100644
+--- a/android/app/src/main/res/values/strings.xml
++++ b/android/app/src/main/res/values/strings.xml
+@@ -1,10 +1,26 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-    <string name="app_name">PhotoDroid</string>
+-    <string name="welcome_title">PhotoDroid</string>
+-    <string name="welcome_message">This app is an unofficial Android port of the PhotoCraft project.\n\nThis app is completely free, and if you\'d like, you can donate to support me. Through this link, both a Daramet donation link (for users in Iran) and wallet addresses are provided:</string>
+-    <string name="welcome_donate_card_title">Donate (Daramet &amp; Wallet Address)</string>
+-    <string name="welcome_thanks">Thank you for your support.</string>
+-    <string name="welcome_close">Close</string>
+-    <string name="welcome_dont_show_again">Don\'t show again</string>
++    <string name="app_name">포토드로이드</string>
++    <string name="app_description">레이어와 PSD를 지원하는 한글 사진 편집기</string>
++    <string name="welcome_title">포토드로이드 시작하기</string>
++    <string name="welcome_message">사진을 불러오고 레이어·마스크·글자로 편집하세요.\n\n사진 열기\n메뉴 → 파일 → 열기에서 사진이나 PSD 파일을 선택하세요.\n\n도구와 화면 이동\n아래 도구 모음을 옆으로 밀어 도구를 고르세요. 두 손가락으로 화면을 확대하거나 이동할 수 있습니다. 레이어는 위쪽 패널 버튼에서 여세요.\n\n한글 입력\n문자 도구를 선택하고 캔버스를 누르세요. 입력 창에서 휴대폰 기본 키보드로 작성한 뒤 삽입을 누르면 글자가 추가됩니다.\n\n저장하기\n메뉴 → 파일 → 저장 또는 내보내기를 사용하세요. 편집본은 내 파일 → 다운로드 → PhotoDroid 폴더에서 찾을 수 있습니다.</string>
++    <string name="welcome_start">시작하기</string>
++    <string name="welcome_open">사진 열기</string>
++    <string name="saved_file">%1$s 저장 완료\n내 파일 → 다운로드 → PhotoDroid</string>
++    <string name="text_input_title">한글·문자 입력</string>
++    <string name="text_input_message">입력한 내용을 현재 커서 위치에 삽입합니다. 선택한 글자가 있으면 입력 내용으로 바뀝니다.</string>
++    <string name="text_input_hint">여기에 글자를 입력하세요</string>
++    <string name="text_input_insert">삽입</string>
++    <string name="text_input_cancel">취소</string>
++    <string name="error_text_input">문자 입력 창을 열 수 없습니다: %1$s</string>
++    <string name="error_unknown_request">지원하지 않는 요청: %1$s</string>
++    <string name="error_file_picker">파일 선택기를 열 수 없습니다: %1$s</string>
++    <string name="error_cache_folder">파일을 가져올 임시 폴더를 만들 수 없습니다.</string>
++    <string name="error_open_file">선택한 파일을 열 수 없습니다.</string>
++    <string name="error_save_request">저장 요청을 처리할 수 없습니다.</string>
++    <string name="error_downloads">다운로드 폴더에 접근할 수 없습니다.</string>
++    <string name="error_write_file">%1$s 파일을 저장할 수 없습니다.</string>
++    <string name="error_finish_save">%1$s 파일의 저장을 완료할 수 없습니다.</string>
++    <string name="error_web_link_only">웹 주소만 열 수 있습니다.</string>
++    <string name="error_open_link">링크를 열 수 없습니다: %1$s</string>
+ </resources>
+diff --git a/apps/photocraft-android/Cargo.toml b/apps/photocraft-android/Cargo.toml
+index b570d76..660af3c 100644
+--- a/apps/photocraft-android/Cargo.toml
++++ b/apps/photocraft-android/Cargo.toml
+@@ -35,6 +35,7 @@ photocraft-ui-egui = { workspace = true }
+ # No `accesskit`: eframe rejects it with the NativeActivity backend (see ui-egui/Cargo.toml).
+ eframe = { workspace = true, features = ["wgpu", "persistence", "android-native-activity"] }
+ egui = { workspace = true }
++serde_json = { workspace = true }
+ # The same winit as eframe's (its `activity` module provides the AndroidApp type).
+ winit = { version = "0.30.13", default-features = false, features = ["android-native-activity"] }
+ # The JNI version android-activity 0.6 uses. Sharing it means `JavaVM::singleton()` is the VM that
+diff --git a/apps/photocraft-android/src/lib.rs b/apps/photocraft-android/src/lib.rs
+index 13de6ab..9e941cb 100644
+--- a/apps/photocraft-android/src/lib.rs
++++ b/apps/photocraft-android/src/lib.rs
+@@ -4,7 +4,7 @@
+ //! NativeActivity backend. This crate provides what the desktop shell does natively:
+ //!
+ //! - file access through the system file picker (Storage Access Framework) and saves to
+-//!   `Downloads/PhotoCraft` (MediaStore), both through `PhotoCraftActivity` (Java; see `platform`);
++//!   `Download/PhotoDroid` (MediaStore), both through `PhotoCraftActivity` (Java; see `platform`);
+ //! - app-private storage for preferences, crash recovery and brush presets;
+ //! - the system bars and soft keyboard, which the UI keeps clear of (`shell`).
+ //!
+diff --git a/apps/photocraft-android/src/protocol.rs b/apps/photocraft-android/src/protocol.rs
+index fa97b15..6d6324d 100644
+--- a/apps/photocraft-android/src/protocol.rs
++++ b/apps/photocraft-android/src/protocol.rs
+@@ -24,6 +24,8 @@ pub enum Event {
+     Descriptor { name: String, fd: i32 },
+     /// A picked file that couldn't be copied. `name` may be empty.
+     Error { name: String, message: String },
++    /// Unicode committed by Android's native EditText, including line breaks and IME composition.
++    Text { text: String },
+     /// The picker session is over (after its files, if it returned any).
+     Done,
+ }
+@@ -41,6 +43,7 @@ pub fn parse_event(line: &str) -> Option<Event> {
+             _ => Some(Event::Error { name, message: format!("invalid file descriptor {rest:?}") }),
+         },
+         "error" => Some(Event::Error { name, message: rest }),
++        "text" => Some(Event::Text { text: rest }),
+         "done" => Some(Event::Done),
+         _ => None,
+     }
+@@ -147,6 +150,14 @@ mod tests {
+         assert_eq!(parse_event(&line), Some(Event::Error { name: "a.psd".into(), message: format!("one{}two", SEP) }));
+     }
+ 
++    #[test]
++    fn native_text_preserves_hangul_line_breaks_and_unicode() {
++        let text = format!("안녕하세요\n한글 입력 🖼️\t두 번째 줄{SEP}끝");
++        // Unlike names/errors, native text is the final field and is not sanitized by Java.
++        let line = format!("text{SEP}{SEP}{text}");
++        assert_eq!(parse_event(&line), Some(Event::Text { text }));
++    }
++
+     #[test]
+     fn replies_are_ok_or_err() {
+         assert_eq!(parse_reply("ok"), Ok(String::new()));
+diff --git a/apps/photocraft-android/src/services.rs b/apps/photocraft-android/src/services.rs
+index 1818e44..1731238 100644
+--- a/apps/photocraft-android/src/services.rs
++++ b/apps/photocraft-android/src/services.rs
+@@ -2,7 +2,7 @@
+ //!
+ //! Files come in through the system file picker: the activity hands each picked file over (as a
+ //! descriptor, or as a copy in app cache) and a reader thread puts its bytes in [`Link::inbox`],
+-//! for the UI to open. The UI thread never reads a file itself. Saves go to `Downloads/PhotoCraft`
++//! for the UI to open. The UI thread never reads a file itself. Saves go to `Downloads/PhotoDroid`
+ //! through MediaStore (see `PhotoCraftActivity.save`). Preferences, crash recovery and brush
+ //! presets live in app-private storage. Anything that needs a desktop facility is left `None`, so
+ //! the UI hides or skips it, as it does on the web.
+@@ -108,7 +108,7 @@ impl Link {
+         self.set_picking(true);
+         if let Err(e) = platform::call("open", "").and_then(|reply| protocol::parse_reply(&reply)) {
+             self.set_picking(false);
+-            self.notify(true, format!("The file picker could not be opened: {e}"));
++            self.notify(true, format!("파일 선택기를 열 수 없습니다: {e}"));
+         }
+     }
+ }
+@@ -119,7 +119,7 @@ fn locked<T>(queue: &Mutex<T>) -> MutexGuard<'_, T> {
+ }
+ 
+ /// The file dialog service (`Services::file_dialog`). Save has no dialog: the suggested name is
+-/// used, in Downloads/PhotoCraft. File › Open starts the system picker, and the files it picks come
++/// used, in Downloads/PhotoDroid. File › Open starts the system picker, and the files it picks come
+ /// back through the inbox to be opened there, so the dialog is answered as cancelled at once. A
+ /// command that reads one file (place, scripts, presets, notes) would otherwise open it as a new
+ /// document, so it gets a message instead and is cancelled.
+@@ -131,7 +131,7 @@ fn file_dialog(link: Link) -> FileDialogFn {
+             reply.send(None);
+         }
+         FileDialogRequest::Open { multiple: false, .. } | FileDialogRequest::Folder { .. } => {
+-            link.notify(false, "Placing files, scripts, presets and notes isn't available on Android yet. Use File › Open.");
++            link.notify(false, "이 버전에서는 파일 배치와 스크립트·프리셋·메모 가져오기를 지원하지 않습니다. 파일 → 열기를 사용하세요.");
+             reply.send(None);
+         }
+     })
+@@ -174,8 +174,8 @@ pub fn services(dirs: &Dirs, link: &Link) -> Services {
+         })),
+         encode_png: Some(Box::new(encode_png)),
+         open_url: Some(Box::new(open_url)),
+-        // The activity makes the request explicit (see `softKeyboard` there); a failed request
+-        // leaves the keyboard as it is.
++        // NativeActivity cannot deliver composing IME text. The activity uses a native EditText
++        // dialog and returns completed Unicode through the text event (see `softKeyboard`).
+         soft_keyboard: Some(Box::new(|show: bool| {
+             let _ = platform::call("keyboard", if show { "show" } else { "hide" });
+         })),
+@@ -242,7 +242,7 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), String> {
+     photocraft_format::atomic_write(path, bytes).map_err(|e| e.to_string())
+ }
+ 
+-/// Saves exports into `Downloads/PhotoCraft`. It remembers the copy each name was saved to, so a
++/// Saves exports into `Downloads/PhotoDroid`. It remembers the copy each name was saved to, so a
+ /// second save of the same name replaces that copy instead of adding "name (1)".
+ struct Saver {
+     staging: PathBuf,
+@@ -265,7 +265,7 @@ impl Saver {
+         let argument = protocol::join_fields(&[name.as_str(), protocol::mime_type(&name), staged_path.as_str(), previous.as_str()]);
+         let reply = platform::call("save", &argument);
+         let _ = std::fs::remove_file(&staged);
+-        let uri = protocol::parse_reply(&reply?).map_err(|e| format!("{name} could not be saved: {e}"))?;
++        let uri = protocol::parse_reply(&reply?).map_err(|e| format!("{name} 파일을 저장할 수 없습니다: {e}"))?;
+         self.saved.borrow_mut().insert(name, uri);
+         let index = protocol::format_index(&self.saved.borrow());
+         if let Err(e) = write_atomic(&self.index, index.as_bytes()) {
+@@ -276,7 +276,7 @@ impl Saver {
+ 
+     fn stage(&self, name: &str, bytes: &[u8]) -> Result<PathBuf, String> {
+         static NEXT: AtomicU64 = AtomicU64::new(1);
+-        let fail = |e: std::io::Error| format!("{name} could not be staged: {e}");
++        let fail = |e: std::io::Error| format!("{name} 파일의 저장을 준비할 수 없습니다: {e}");
+         std::fs::create_dir_all(&self.staging).map_err(fail)?;
+         let staged = self.staging.join(format!("{}-{name}", NEXT.fetch_add(1, Ordering::Relaxed)));
+         std::fs::write(&staged, bytes).map_err(fail)?;
+diff --git a/apps/photocraft-android/src/shell.rs b/apps/photocraft-android/src/shell.rs
+index c9456a7..22c6c1d 100644
+--- a/apps/photocraft-android/src/shell.rs
++++ b/apps/photocraft-android/src/shell.rs
+@@ -33,6 +33,8 @@ pub fn run(app: AndroidApp) {
+     };
+     platform::set_activity(app.activity_as_ptr());
+     let dirs = Dirs::new(root);
++    // Choose Korean on the first launch only; a later language choice belongs to the user.
++    let first_launch = !dirs.root().join("preferences.json").exists();
+     crash_report::set_root(dirs.root());
+     let shell_root = dirs.root().to_path_buf();
+     // eframe restores the saved window and panel layout before our code runs; drop a layout that
+@@ -43,13 +45,18 @@ pub fn run(app: AndroidApp) {
+     // The adapter's real texture limits, so large documents stay on the GPU.
+     photocraft_ui_egui::gpu_canvas::use_adapter_limits(&mut options.wgpu_options.wgpu_setup);
+     let result = eframe::run_native(
+-        "PhotoDroid",
++        "포토드로이드",
+         options,
+         Box::new(move |cc| {
+             let link = Link::new(cc.egui_ctx.clone());
+             let svc = services::services(&dirs, &link);
+             PhotocraftApp::setup_context(&cc.egui_ctx, ThemeKind::Pro);
+             let mut photo = PhotocraftApp::new(Session::new(), svc);
++            if first_launch {
++                if let Err(error) = photo.run("prefs.set", serde_json::json!({"path": "interface.language", "value": "ko"})) {
++                    log::warn!("PhotoDroid: could not set the initial Korean language: {error}");
++                }
++            }
+             // No window decorations on Android: the app's own top bar is the only bar.
+             photo.custom_titlebar = false;
+             photo.integrated_titlebar = false;
+@@ -68,13 +75,7 @@ pub fn run(app: AndroidApp) {
+             let debug_on = crash_report::debug_enabled(dirs.root());
+             diag::set_enabled(debug_on);
+             if debug_on {
+-                diag::note(|| {
+-                    format!(
+-                        "PhotoCraft {} started ({})",
+-                        env!("CARGO_PKG_VERSION"),
+-                        photocraft_doc::cpu::diag_summary()
+-                    )
+-                });
++                diag::note(|| format!("PhotoCraft {} started ({})", env!("CARGO_PKG_VERSION"), photocraft_doc::cpu::diag_summary()));
+                 // A run that did not end normally left its log (see `crash_report`): save it to Downloads now.
+                 if let Some((name, bytes)) = crash_report::begin(dirs.root()) {
+                     let saved = photo.services.write.as_mut().map(|write| write(name.as_str(), bytes.as_slice()));
+@@ -101,6 +102,7 @@ pub fn run(app: AndroidApp) {
+                 root: shell_root,
+                 last_insets_px: [0; 4],
+                 last_insets_diag: String::new(),
++                pending_text: Vec::new(),
+             }))
+         }),
+     );
+@@ -136,6 +138,8 @@ struct AndroidShell {
+     last_insets_px: [i32; 4],
+     /// Last logged diagnostic breakdown from `PhotoCraftActivity` (`insets_diag`).
+     last_insets_diag: String,
++    /// Completed native IME input, inserted once into egui's next input frame.
++    pending_text: Vec<String>,
+ }
+ 
+ impl Drop for AndroidShell {
+@@ -170,11 +174,12 @@ impl AndroidShell {
+                     self.link.notify(true, text);
+                 }
+                 Some(protocol::Event::Done) => self.link.set_picking(false),
++                Some(protocol::Event::Text { text }) => self.pending_text.push(text),
+                 None => log::warn!("PhotoCraft: unexpected event from the activity: {line:?}"),
+             }
+         }
+         for message in self.link.take_messages() {
+-            let _ = notices::post(&mut self.app, "PhotoDroid", vec![message.text], message.error, None);
++            let _ = notices::post(&mut self.app, "포토드로이드", vec![message.text], message.error, None);
+         }
+     }
+ 
+@@ -189,14 +194,14 @@ impl AndroidShell {
+         let label = name.clone();
+         let worker = std::thread::Builder::new().name("photocraft-read".into()).spawn(move || match read_source(source) {
+             Ok(bytes) => link.deliver(name, bytes),
+-            Err(e) => link.notify(true, format!("{name} could not be read: {e}")),
++            Err(e) => link.notify(true, format!("{name} 파일을 읽을 수 없습니다: {e}")),
+         });
+         if let Err(e) = worker {
+             // The thread never ran, so nothing else will remove the app-cache copy.
+             if let Some(path) = copy {
+                 let _ = std::fs::remove_file(path);
+             }
+-            self.link.notify(true, format!("{label} could not be read: {e}"));
++            self.link.notify(true, format!("{label} 파일을 읽을 수 없습니다: {e}"));
+         }
+     }
+ }
+@@ -231,14 +236,8 @@ impl AndroidShell {
+     /// Keeps the last known value in effect if a JNI poll ever fails, and records full diagnostic
+     /// details when `.txt` logging is enabled.
+     fn system_insets(&mut self, ctx: &egui::Context, raw_input: &egui::RawInput) -> egui::SafeAreaInsets {
+-        let native_ppp = raw_input
+-            .viewports
+-            .get(&raw_input.viewport_id)
+-            .and_then(|v| v.native_pixels_per_point)
+-            .or_else(|| ctx.native_pixels_per_point());
+-        let per_point = native_ppp
+-            .map_or_else(|| ctx.pixels_per_point(), |n| n * ctx.zoom_factor())
+-            .max(f32::EPSILON);
++        let native_ppp = raw_input.viewports.get(&raw_input.viewport_id).and_then(|v| v.native_pixels_per_point).or_else(|| ctx.native_pixels_per_point());
++        let per_point = native_ppp.map_or_else(|| ctx.pixels_per_point(), |n| n * ctx.zoom_factor()).max(f32::EPSILON);
+ 
+         if let Ok(reply) = platform::call("insets", "")
+             && let Ok(payload) = protocol::parse_reply(&reply)
+@@ -247,10 +246,7 @@ impl AndroidShell {
+             let changed = px != self.last_insets_px;
+             self.last_insets_px = px;
+             if diag::enabled() && (changed || self.last_insets_diag.is_empty()) {
+-                let detail = platform::call("insets_diag", "")
+-                    .ok()
+-                    .and_then(|r| protocol::parse_reply(&r).ok())
+-                    .unwrap_or_default();
++                let detail = platform::call("insets_diag", "").ok().and_then(|r| protocol::parse_reply(&r).ok()).unwrap_or_default();
+                 if changed || detail != self.last_insets_diag {
+                     self.last_insets_diag = detail.clone();
+                     let [top, bottom, left, right] = px;
+@@ -269,12 +265,7 @@ impl AndroidShell {
+ 
+         let [top, bottom, left, right] = self.last_insets_px;
+         let points = |pixels: i32| pixels.max(0) as f32 / per_point;
+-        egui::SafeAreaInsets(egui::epaint::MarginF32 {
+-            left: points(left),
+-            right: points(right),
+-            top: points(top),
+-            bottom: points(bottom),
+-        })
++        egui::SafeAreaInsets(egui::epaint::MarginF32 { left: points(left), right: points(right), top: points(top), bottom: points(bottom) })
+     }
+ }
+ 
+@@ -283,6 +274,9 @@ impl eframe::App for AndroidShell {
+         let began = Instant::now();
+         self.frame_started = Some(began);
+         self.pump();
++        if !self.pending_text.is_empty() {
++            ctx.request_repaint();
++        }
+         self.app.logic(ctx, frame);
+         self.frame_work = began.elapsed();
+         // Keep frames coming while something is still to arrive: a picker's files, the keyboard's
+@@ -290,6 +284,7 @@ impl eframe::App for AndroidShell {
+         // fire while a finger rests still), and the first seconds after launch.
+         if self.link.is_picking()
+             || ctx.text_edit_focused()
++            || self.app.ui.text_edit.is_some()
+             || ctx.input(|i| i.pointer.any_down() || i.any_touches())
+             || self.started.elapsed() < SETTLE_TIME
+         {
+@@ -300,6 +295,10 @@ impl eframe::App for AndroidShell {
+     fn raw_input_hook(&mut self, ctx: &egui::Context, raw_input: &mut egui::RawInput) {
+         let insets = self.system_insets(ctx, raw_input);
+         raw_input.safe_area_insets = Some(insets);
++        // NativeActivity's raw text path drops composed Korean on some keyboards. Android's
++        // EditText commits Unicode through our event queue; Paste preserves the exact text,
++        // including newlines and quotes, and honors the active type layer's selection.
++        raw_input.events.extend(self.pending_text.drain(..).map(egui::Event::Paste));
+         self.app.raw_input_hook(ctx, raw_input);
+     }
+ 
+diff --git a/crates/text/build.rs b/crates/text/build.rs
+index 5377370..12f50d4 100644
+--- a/crates/text/build.rs
++++ b/crates/text/build.rs
+@@ -14,8 +14,8 @@
+ //! the 25,165,824-byte gate. The web build loads fonts served next to the wasm instead, on
+ //! demand (`fonts/manifest.txt`, see `served.rs` and packaging/web/README.md › Fonts).
+ //!
+-//! Also deflates the bundled UI fonts (`assets/fonts/*.ttf`, `fonts::BUNDLED`) into
+-//! `OUT_DIR/fonts/<file>.deflate`: 0.73 MB of binary instead of 1.5 MB, for the same size gate.
++//! Also deflates the bundled UI fonts (`assets/fonts/*.ttf`, `fonts::BUNDLED`) and the native
++//! Korean fallback into `OUT_DIR/fonts/<file>.deflate`. The UI and text engine share these bytes.
+ use std::fmt::Write as _;
+ use std::path::PathBuf;
+ 
+@@ -41,14 +41,14 @@ fn main() {
+     deflate_bundled_fonts();
+ }
+ 
+-/// Deflate the bundled fonts into `OUT_DIR/fonts/` (`fonts::BUNDLED` includes them).
++/// Deflate the bundled fonts into `OUT_DIR/fonts/` (`fonts` includes them).
+ fn deflate_bundled_fonts() {
+     use std::io::Write as _;
+     let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/fonts");
+     let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("fonts");
+     let result = (|| -> std::io::Result<()> {
+         std::fs::create_dir_all(&out)?;
+-        for name in ["Inter-Regular.ttf", "Inter-Medium.ttf", "Inter-SemiBold.ttf", "JetBrainsMono-Regular.ttf"] {
++        for name in ["Inter-Regular.ttf", "Inter-Medium.ttf", "Inter-SemiBold.ttf", "JetBrainsMono-Regular.ttf", "NanumGothic-Regular.ttf"] {
+             let path = src.join(name);
+             println!("cargo::rerun-if-changed={}", path.display());
+             let mut z = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::best());
+diff --git a/crates/text/src/cjk.rs b/crates/text/src/cjk.rs
+index f0e3193..06b5bad 100644
+--- a/crates/text/src/cjk.rs
++++ b/crates/text/src/cjk.rs
+@@ -389,6 +389,16 @@ pub fn font_files(script: CjkScript) -> Vec<FontFile> {
+             TraditionalChinese => vec![w("msjh.ttc", "Microsoft JhengHei"), w("msjh.ttf", ""), w("mingliu.ttc", "")],
+             Korean => vec![w("malgun.ttf", ""), w("gulim.ttc", "")],
+         }
++    } else if cfg!(target_os = "android") {
++        // AOSP uses one collection for all CJK scripts. Match its family name rather than
++        // assuming a collection index: Korean is a different face from Japanese.
++        let noto = match script {
++            Japanese => "Noto Sans CJK JP",
++            SimplifiedChinese => "Noto Sans CJK SC",
++            TraditionalChinese => "Noto Sans CJK TC",
++            Korean => "Noto Sans CJK KR",
++        };
++        vec![f("/system/fonts/NotoSansCJK-Regular.ttc", noto)]
+     } else {
+         // One Noto Sans CJK collection covers all four scripts; the face picks the glyph forms.
+         let noto = match script {
+@@ -472,6 +482,8 @@ pub fn last_resort_files() -> Vec<FontFile> {
+     } else if cfg!(target_os = "windows") {
+         let dir = std::env::var("WINDIR").unwrap_or_else(|_| "C:\\Windows".into());
+         vec![FontFile { path: std::path::Path::new(&dir).join("Fonts").join("ARIALUNI.TTF"), family: String::new() }]
++    } else if cfg!(target_os = "android") {
++        vec![f("/system/fonts/DroidSansFallback.ttf")]
+     } else {
+         with_flatpak_host_fonts(vec![
+             f("/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf"),
+diff --git a/crates/text/src/fonts.rs b/crates/text/src/fonts.rs
+index 7260023..3479e4e 100644
+--- a/crates/text/src/fonts.rs
++++ b/crates/text/src/fonts.rs
+@@ -28,14 +28,18 @@ macro_rules! bundled_font {
+ 
+ // The font files are embedded once, here. The UI (`ui-egui` theme) uses these same statics:
+ // a second `include_bytes!` of the same file elsewhere put a second 1.5 MB copy into the wasm.
+-// They are stored deflated by build.rs (0.73 MB instead of 1.5 MB: the web build's 24 MiB size
+-// gate, packaging/web/package.sh) and inflated on first use, once per process.
++// They are stored deflated by build.rs and inflated on first use, once per process. The native
++// Korean fallback is excluded from wasm to preserve the web build's existing size budget.
+ pub static INTER_REGULAR: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("Inter-Regular.ttf")));
+ pub static INTER_MEDIUM: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("Inter-Medium.ttf")));
+ pub static INTER_SEMIBOLD: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("Inter-SemiBold.ttf")));
+ pub static JETBRAINS_MONO_REGULAR: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("JetBrainsMono-Regular.ttf")));
++/// Korean UI and document fallback, including all 11,172 modern Hangul syllables.
++/// Shared with the UI so an Android APK embeds the font only once.
++#[cfg(not(target_arch = "wasm32"))]
++pub static NANUM_GOTHIC_REGULAR: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("NanumGothic-Regular.ttf")));
+ 
+-/// Fonts shipped with Photocraft (OFL; licences in `assets/fonts`).
++/// Latin UI fonts shipped with Photocraft (OFL; licences in `assets/fonts`).
+ pub static BUNDLED: [(&str, &LazyLock<Vec<u8>>); 4] = [
+     ("Inter-Regular.ttf", &INTER_REGULAR),
+     ("Inter-Medium.ttf", &INTER_MEDIUM),
+@@ -43,7 +47,7 @@ pub static BUNDLED: [(&str, &LazyLock<Vec<u8>>); 4] = [
+     ("JetBrainsMono-Regular.ttf", &JETBRAINS_MONO_REGULAR),
+ ];
+ 
+-/// Inflated fonts are bounded (the largest is 0.42 MB), so corrupt data can't exhaust memory.
++/// Inflated fonts are bounded, so corrupt data can't exhaust memory.
+ const MAX_BUNDLED_FONT_BYTES: u64 = 16 << 20;
+ 
+ /// Inflate a bundled font. Data that doesn't inflate gives no font (empty bytes, which every
+@@ -222,6 +226,10 @@ impl FontDb {
+         for (_, bytes) in BUNDLED {
+             db.register_static_font(bytes.as_slice());
+         }
++        // Keep Korean text layers usable on devices without an installed Korean font. The
++        // family is already a CJK fallback candidate; Latin text continues to use Inter.
++        #[cfg(not(target_arch = "wasm32"))]
++        db.register_static_font(NANUM_GOTHIC_REGULAR.as_slice());
+         // The optional craft-fonts (empty unless built with CRAFT_FONTS_DIR; always empty on
+         // wasm32), before any system font.
+         for f in crate::craft_fonts::CRAFT_FONTS.iter().filter(|f| f.is_japanese()) {
+@@ -877,6 +885,34 @@ mod tests {
+         for (name, bytes) in super::BUNDLED {
+             assert_eq!(bytes.as_slice(), std::fs::read(dir.join(name)).unwrap(), "{name}");
+         }
++        #[cfg(not(target_arch = "wasm32"))]
++        assert_eq!(super::NANUM_GOTHIC_REGULAR.as_slice(), std::fs::read(dir.join("NanumGothic-Regular.ttf")).unwrap());
++    }
++
++    /// Korean document text must work with no OEM or downloaded fonts available.
++    #[test]
++    #[cfg(not(target_arch = "wasm32"))]
++    fn bundled_korean_covers_modern_hangul_without_system_fonts() {
++        use skrifa::MetadataProvider;
++        let font = skrifa::FontRef::new(super::NANUM_GOTHIC_REGULAR.as_slice()).expect("valid bundled Korean font");
++        let map = font.charmap();
++        for cp in 0xac00..=0xd7a3 {
++            let ch = char::from_u32(cp).unwrap();
++            assert!(map.map(ch).is_some_and(|g| g.to_u32() != 0), "missing modern Hangul syllable {ch}");
++        }
++        for ch in "ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ".chars() {
++            assert!(map.map(ch).is_some_and(|g| g.to_u32() != 0), "missing compatibility jamo {ch}");
++        }
++        let mut db = super::FontDb::new();
++        assert!(db.has_family("NanumGothic"));
++        assert!(db.fallback_stack().any(|family| family == "NanumGothic"));
++        assert_eq!(db.localized_family_names().get("NanumGothic").map(String::as_str), Some("나눔고딕"));
++        let mut engine = crate::TextEngine::new();
++        let layer = photocraft_doc::TextLayer { text: "한글 사진 편집 2026".into(), font_family: "Inter".into(), size_pt: 32.0, ..Default::default() };
++        let (layout, rendered) = engine.render(&layer, 72.0, photocraft_color::PixelFormat::RGBA8);
++        assert!(!layout.glyphs.is_empty());
++        assert!(layout.glyphs.iter().all(|glyph| glyph.id != 0), "Korean text layers must use actual glyphs, not missing-glyph boxes");
++        assert!(rendered.surface.read_region(rendered.rect).chunks_exact(4).any(|pixel| pixel[3] > 0.0), "Korean text must rasterize for export");
+     }
+ 
+     /// Corrupt or oversized font data gives no font, not a panic.
+diff --git a/crates/ui-egui/src/cjk_fonts.rs b/crates/ui-egui/src/cjk_fonts.rs
+index 8deb889..0734923 100644
+--- a/crates/ui-egui/src/cjk_fonts.rs
++++ b/crates/ui-egui/src/cjk_fonts.rs
+@@ -22,6 +22,9 @@
+ //! [`photocraft_text::craft_fonts`]) carry Japanese fonts (BIZ UDPGothic first): they are tried
+ //! before the system Japanese fonts, in the Japanese slot of the same locale order. Without
+ //! craft-fonts (and on the web, which never embeds them) nothing changes.
++//!
++//! Native builds also bundle NanumGothic for Korean. Its compressed bytes are shared with
++//! the document text engine, so Korean menus and text layers work without OEM font support.
+ 
+ use egui::epaint::text::{FontInsert, FontPriority, InsertFontFamily};
+ use egui::{FontData, FontFamily, FontId, Shape};
+@@ -48,13 +51,26 @@ pub struct Sources {
+     pub scripts: fn(Script) -> Vec<PathBuf>,
+     /// The face of a font file whose character map has the character (`None`: not this file).
+     pub covers: fn(&[u8], char) -> Option<u32>,
+-    /// Embedded fonts tried before `files` for a script (craft-fonts' Japanese fonts).
++    /// Embedded fonts tried before `files` for a script (Korean and optional Japanese).
+     pub embedded: fn(CjkScript) -> Vec<&'static CraftFont>,
+ }
+ 
+-/// craft-fonts' Japanese fonts for the Japanese script, UI face first (empty without craft-fonts).
++#[cfg(not(target_arch = "wasm32"))]
++static KOREAN_UI_FONT: std::sync::LazyLock<CraftFont> = std::sync::LazyLock::new(|| CraftFont {
++    family: "NanumGothic",
++    style: "Regular",
++    scripts: &["Kore"],
++    bytes: photocraft_text::fonts::NANUM_GOTHIC_REGULAR.as_slice(),
++});
++
++/// Bundled Korean and craft-fonts' optional Japanese fonts, UI face first.
+ pub fn craft_embedded(script: CjkScript) -> Vec<&'static CraftFont> {
+-    if script == CjkScript::Japanese { craft_fonts::japanese_for_ui() } else { Vec::new() }
++    match script {
++        CjkScript::Japanese => craft_fonts::japanese_for_ui(),
++        #[cfg(not(target_arch = "wasm32"))]
++        CjkScript::Korean => vec![&KOREAN_UI_FONT],
++        _ => Vec::new(),
++    }
+ }
+ 
+ /// No embedded fonts (tests that pin the system-font behaviour).
+@@ -210,7 +226,7 @@ impl CjkFallback {
+         None
+     }
+ 
+-    /// The first embedded (craft-fonts) font for `s`, registered from its static bytes.
++    /// The first embedded font for `s`, registered from its static bytes.
+     fn load_embedded(&mut self, s: CjkScript) -> Option<(String, FontData)> {
+         let f = (self.sources.embedded)(s).into_iter().find(|f| !f.bytes.is_empty())?;
+         let path = PathBuf::from(format!("craft-fonts/{} {}", f.family, f.style));
+@@ -857,11 +873,28 @@ mod tests {
+         }
+     }
+ 
+-    /// No system fonts at all: craft-fonts alone draws Japanese.
++    /// No system fonts at all: only the embedded script fonts are available.
+     fn craft_only(locale: fn() -> Option<String>) -> Sources {
+         Sources { locale, files: |_| vec![], last_resort: Vec::new, scripts: |_| Vec::new(), covers: scripts::covering_face, embedded: craft_embedded }
+     }
+ 
++    #[test]
++    #[cfg(not(target_arch = "wasm32"))]
++    fn bundled_korean_renders_without_system_fonts() {
++        let ctx = egui::Context::default();
++        crate::theme::install_fonts_with(&ctx, craft_only(|| Some("ko-KR".into())));
++        assert!(render(&ctx, "파일 편집 이미지 레이어 선택 필터 보기 도움말"));
++        assert!(render(&ctx, "실행 취소 다시 실행 열기 저장 내보내기 한글·문자 입력 ㄱㄴㄷ ㅏㅓㅗ"));
++        // Register the actual bundled font, shared with document text, and retain Inter for Latin.
++        let fonts = ctx.fonts(|f| f.definitions().clone());
++        let name = format!("{FONT_PREFIX}-0");
++        assert!(fonts.font_data.get(&name).is_some_and(|d| { std::ptr::eq(d.font.as_ref().as_ptr(), photocraft_text::fonts::NANUM_GOTHIC_REGULAR.as_ptr()) }));
++        for (family, stack) in &fonts.families {
++            assert_eq!(stack.last(), Some(&name), "{family:?}: Korean fallback appended last");
++            assert_ne!(stack.first(), Some(&name), "{family:?}: preserve the Latin UI font");
++        }
++    }
++
+     #[test]
+     fn craft_fonts_render_japanese_without_system_fonts() {
+         let Some(ui_font) = craft_fonts::japanese_for_ui().first().copied() else {
+diff --git a/crates/ui-egui/src/i18n/ko.tsv b/crates/ui-egui/src/i18n/ko.tsv
+index df69914..4aeafa7 100644
+--- a/crates/ui-egui/src/i18n/ko.tsv
++++ b/crates/ui-egui/src/i18n/ko.tsv
+@@ -3039,7 +3039,7 @@ fontWeight	Italic	기울임
+ 	Pattern Stamp	패턴 스탬프
+ 	Impressionist	인상파
+ 	Virtual mouse	가상 마우스
+-	Virtual keyboard	가상 키보드
++	Virtual keyboard	단축키 키보드
+ 	Save Diagnostic Log	진단 로그 저장
+ 	Magnifier	돋보기
+ 	Rotate View	보기 회전
+@@ -3398,3 +3398,17 @@ curves	Smooth	매끄럽게
+ 	No commands match	일치하는 명령 없음
+ 	PhotoDroid	PhotoDroid
+ 	This version is an Android port of this project	이 버전은 이 프로젝트의 Android 포트입니다
++
++# Android controls: the system IME handles Korean; the floating keyboard is for shortcuts.
++	Text input	한글·문자 입력
++	Right click	오른쪽 클릭
++	Precise pointer	정밀 포인터
++	Debug	진단 기록
++	Saving .txt logs in Downloads/PhotoDroid	다운로드/PhotoDroid에 진단 기록 저장
++	Off — .txt log files removed	꺼짐 · 저장된 진단 기록 삭제
++	CPU Cores	처리 코어 수
++	{active_cores} / {max_cores} active cores	{active_cores} / {max_cores}개 코어 사용
++	Decrease CPU cores	처리 코어 수 줄이기
++	Increase CPU cores	처리 코어 수 늘리기
++	ON	켬
++	OFF	끔
+diff --git a/crates/ui-egui/src/mobile.rs b/crates/ui-egui/src/mobile.rs
+index 4ea5939..2a68013 100644
+--- a/crates/ui-egui/src/mobile.rs
++++ b/crates/ui-egui/src/mobile.rs
+@@ -48,6 +48,49 @@ const SHEET_GROUPS: [(Group, &str, &str); 5] = [
+     (Group::Navigator, "navigation", "Navigator"),
+ ];
+ 
++/// Additional PhotoDroid controls, separate from the shared editor's multilingual UI. This Korean
++/// Android edition supplies Korean copy for these controls and English as the fallback; the shared
++/// editor keeps its existing complete language catalogs. Keep this set explicit so its supported
++/// translation coverage can be checked without making unreviewed changes to the other languages.
++#[derive(Clone, Copy, Debug)]
++enum AndroidLabel {
++    TextInput,
++    RightClick,
++    PrecisePointer,
++    Debug,
++    SavingLogs,
++    LogsOff,
++    CpuCores,
++    ActiveCores,
++    DecreaseCores,
++    IncreaseCores,
++    On,
++    Off,
++}
++
++impl AndroidLabel {
++    fn source(self) -> &'static str {
++        match self {
++            Self::TextInput => "Text input",
++            Self::RightClick => "Right click",
++            Self::PrecisePointer => "Precise pointer",
++            Self::Debug => "Debug",
++            Self::SavingLogs => "Saving .txt logs in Downloads/PhotoDroid",
++            Self::LogsOff => "Off — .txt log files removed",
++            Self::CpuCores => "CPU Cores",
++            Self::ActiveCores => "{active_cores} / {max_cores} active cores",
++            Self::DecreaseCores => "Decrease CPU cores",
++            Self::IncreaseCores => "Increase CPU cores",
++            Self::On => "ON",
++            Self::Off => "OFF",
++        }
++    }
++
++    fn text(self) -> &'static str {
++        i18n::tr(i18n::current(), self.source())
++    }
++}
++
+ /// Does a window of this size get the phone layout? Its shorter side must be under
+ /// [`PHONE_MAX_SIDE`], in either orientation.
+ pub fn fits_phone(size: Vec2) -> bool {
+@@ -304,54 +347,78 @@ fn top_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     let ctx = ui.ctx().clone();
+     let (menu_open, sheet_open) = (is_set(&ctx, menu_open_id()), is_set(&ctx, sheet_open_id()));
+     let (mouse_on, keys_on, lens_on) = (app.virtual_mouse.is_on(), app.virtual_input.keyboard_on(), app.virtual_mouse.magnifier_on());
+-    let title = app
+-        .session
+-        .active()
+-        .map(|d| format!("{}{}", d.doc.name, if d.is_dirty() { "  •" } else { "" }))
+-        .unwrap_or_else(|| "PhotoDroid".into());
++    let title = app.session.active().map(|d| format!("{}{}", d.doc.name, if d.is_dirty() { "  •" } else { "" })).unwrap_or_else(|| "PhotoDroid".into());
+     let status = app.ui.status.clone();
+     let can_undo = menus::is_enabled(app, "edit.undo");
+     let can_redo = menus::is_enabled(app, "edit.redo");
++    let can_input_text = app.ui.text_edit.is_some();
+     let (mut toggle_menu, mut toggle_sheet) = (false, false);
+     let (mut toggle_mouse, mut toggle_keys, mut toggle_lens) = (false, false, false);
++    let mut open_text_input = false;
+     let mut run: Option<&str> = None;
+-    egui::Panel::top("phone-top")
+-        .exact_size(TOP_BAR)
+-        .frame(Frame::NONE.fill(t.chrome).inner_margin(Margin::symmetric(4, 0)))
+-        .show(ui, |ui| {
+-            // Remembered for the next frame's input: the virtual mouse keeps the bar's touches off the canvas.
+-            ctx.data_mut(|d| d.insert_temp(top_bar_rect_id(), ui.max_rect()));
+-            ui.horizontal_centered(|ui| {
+-                ui.spacing_mut().item_spacing.x = 2.0;
+-                toggle_menu = icons::button(ui, "align-justify", TOUCH, menu_open, tl!("Menu")).clicked();
+-                // The name, and the status line under it, take the room the buttons leave.
+-                // Undo, redo, the mouse, the magnifier, the keyboard and the panels.
+-                let buttons = 6.0;
+-                let name_w = (ui.available_width() - buttons * (TOUCH + 2.0)).max(0.0);
+-                ui.vertical(|ui| {
+-                    ui.set_width(name_w);
+-                    ui.add(egui::Label::new(RichText::new(title.as_str()).font(theme::medium(14.0)).color(t.text)).truncate());
+-                    if !status.is_empty() {
+-                        ui.add(egui::Label::new(RichText::new(status.as_str()).size(11.0).color(t.text_faint)).truncate());
+-                    }
+-                });
+-                let _ = ui.add_enabled_ui(can_undo, |ui| {
+-                    if icons::button(ui, "undo-2", TOUCH, false, tl!("Undo")).clicked() {
+-                        run = Some("edit.undo");
++    egui::Panel::top("phone-top").exact_size(TOP_BAR).frame(Frame::NONE.fill(t.chrome).inner_margin(Margin::symmetric(4, 0))).show(ui, |ui| {
++        // Remembered for the next frame's input: the virtual mouse keeps the bar's touches off the canvas.
++        ctx.data_mut(|d| d.insert_temp(top_bar_rect_id(), ui.max_rect()));
++        // Seven 44pt buttons alone exceed a 320pt phone's width. Keep the essential actions
++        // visible and put the optional input aids in a touch-sized menu on narrow screens.
++        let compact = ui.available_width() < 440.0;
++        ui.horizontal_centered(|ui| {
++            ui.spacing_mut().item_spacing.x = 2.0;
++            toggle_menu = icons::button(ui, "align-justify", TOUCH, menu_open, tl!("Menu")).clicked();
++            // The name, and the status line under it, take the room the buttons leave.
++            // Undo, redo, input aids (one menu or three buttons), and panels.
++            let buttons = if compact { 4.0 } else { 6.0 };
++            let name_w = (ui.available_width() - buttons * (TOUCH + 2.0) - 2.0).max(0.0);
++            ui.vertical(|ui| {
++                ui.set_width(name_w);
++                ui.add(egui::Label::new(RichText::new(title.as_str()).font(theme::medium(14.0)).color(t.text)).truncate());
++                if !status.is_empty() {
++                    ui.add(egui::Label::new(RichText::new(status.as_str()).size(11.0).color(t.text_faint)).truncate());
++                }
++            });
++            let _ = ui.add_enabled_ui(can_undo, |ui| {
++                if icons::button(ui, "undo-2", TOUCH, false, tl!("Undo")).clicked() {
++                    run = Some("edit.undo");
++                }
++            });
++            let _ = ui.add_enabled_ui(can_redo, |ui| {
++                if icons::button(ui, "redo-2", TOUCH, false, tl!("Redo")).clicked() {
++                    run = Some("edit.redo");
++                }
++            });
++            if compact {
++                let more = icons::button(ui, "ellipsis", TOUCH, mouse_on || lens_on || keys_on, tl!("Tools"));
++                egui::Popup::menu(&more).show(|ui| {
++                    ui.set_min_width(200.0);
++                    for (on, label, toggle) in [
++                        (mouse_on, tl!("Virtual mouse"), &mut toggle_mouse),
++                        (lens_on, tl!("Magnifier"), &mut toggle_lens),
++                        (keys_on, tl!("Virtual keyboard"), &mut toggle_keys),
++                    ] {
++                        if ui.add_sized(vec2(ui.available_width(), TOUCH), egui::Button::selectable(on, label)).clicked() {
++                            *toggle = true;
++                            ui.close();
++                        }
+                     }
+-                });
+-                let _ = ui.add_enabled_ui(can_redo, |ui| {
+-                    if icons::button(ui, "redo-2", TOUCH, false, tl!("Redo")).clicked() {
+-                        run = Some("edit.redo");
++                    ui.separator();
++                    if ui
++                        .add_enabled_ui(can_input_text, |ui| ui.add_sized(vec2(ui.available_width(), TOUCH), egui::Button::new(AndroidLabel::TextInput.text())))
++                        .inner
++                        .clicked()
++                    {
++                        open_text_input = true;
++                        ui.close();
+                     }
+                 });
++            } else {
+                 toggle_mouse = toggle_button(ui, "mouse-pointer-2", mouse_on, tl!("Virtual mouse"));
+-                // The magnifier works with a finger too: a loupe in a corner shows what is under it.
++                // The magnifier works with a finger too: a loupe shows what is under it.
+                 toggle_lens = toggle_button(ui, "search", lens_on, tl!("Magnifier"));
+                 toggle_keys = toggle_button(ui, "keyboard", keys_on, tl!("Virtual keyboard"));
+-                toggle_sheet = icons::button(ui, "layers", TOUCH, sheet_open, tl!("Panels")).clicked();
+-            });
++            }
++            toggle_sheet = icons::button(ui, "layers", TOUCH, sheet_open, tl!("Panels")).clicked();
+         });
++    });
+     if toggle_menu {
+         set_flag(&ctx, menu_open_id(), !menu_open);
+         // Whichever way the button goes, the sheet starts on the top menus.
+@@ -371,6 +438,18 @@ fn top_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     if toggle_keys {
+         app.virtual_input.toggle_keyboard();
+     }
++    if open_text_input {
++        // The shortcut keyboard has English/Persian layouts. Android's native text dialog lets
++        // the user's input method compose Korean before inserting the completed text.
++        app.virtual_input.set_keyboard(false);
++        // We send the request explicitly below. Consume any automatic restore request so a
++        // delayed next frame cannot reopen the native dialog after the user has cancelled it.
++        let _ = app.virtual_input.ime_request(true);
++        if let Some(ask) = app.services.soft_keyboard.as_mut() {
++            ask(true);
++        }
++        ctx.request_repaint();
++    }
+     if let Some(id) = run {
+         let _ = app.run(id, json!({}));
+     }
+@@ -402,8 +481,8 @@ fn mouse_bar(app: &mut PhotocraftApp, ctx: &egui::Context) {
+             Frame::popup(ui.style()).show(ui, |ui| {
+                 ui.horizontal(|ui| {
+                     ui.spacing_mut().item_spacing.x = 6.0;
+-                    right = icons::button(ui, "ellipsis", TOUCH, false, "Right click").clicked();
+-                    fine = toggle_button(ui, "scan", precise, "Precise pointer");
++                    right = icons::button(ui, "ellipsis", TOUCH, false, AndroidLabel::RightClick.text()).clicked();
++                    fine = toggle_button(ui, "scan", precise, AndroidLabel::PrecisePointer.text());
+                 });
+             });
+         });
+@@ -1047,6 +1126,12 @@ const MENU_MAX_WIDTH: f32 = 560.0;
+ /// The menu sheet's rows: a finger's target, with room for a second line under the label.
+ const MENU_ROW: f32 = 52.0;
+ 
++/// The room above our shortcut keyboard. Android's system keyboard is already excluded by the
++/// caller's content rectangle, so it must not be deducted a second time.
++fn menu_height(content_height: f32, shortcut_keyboard_height: f32) -> f32 {
++    (content_height * 0.8).min((content_height - shortcut_keyboard_height - 16.0).max(0.0))
++}
++
+ /// The menus, as a sheet over the picture, one menu to a page: the top menus first, then a menu's own
+ /// commands and its submenus, and each submenu on a page of its own. A back button returns to the page
+ /// before. A search lists the matching commands instead, each with the menus it lives in. A command runs
+@@ -1072,7 +1157,9 @@ fn menu(app: &mut PhotocraftApp, ctx: &egui::Context) {
+     let area = egui::Modal::default_area(sheet).anchor(egui::Align2::CENTER_BOTTOM, vec2(0.0, -8.0 - lift));
+     let modal = egui::Modal::new(sheet).area(area).show(ctx, |ui| {
+         ui.set_width(dialog_room(screen.size()).min(MENU_MAX_WIDTH));
+-        ui.set_max_height((screen.height() * 0.8 - lift).max(260.0));
++        // content_rect already excludes the Android keyboard/navigation insets. Subtract only our
++        // own shortcut keyboard here; subtracting nav_bottom_inset again clips landscape menus.
++        ui.set_max_height(menu_height(screen.height(), virtual_input::lift(app)));
+         let searching = !query.trim().is_empty();
+         ui.horizontal(|ui| {
+             ui.spacing_mut().item_spacing.x = 4.0;
+@@ -1086,8 +1173,10 @@ fn menu(app: &mut PhotocraftApp, ctx: &egui::Context) {
+             } else {
+                 tl!("Menu").to_string()
+             };
++            let title_width = (ui.available_width() - TOUCH - 4.0).max(0.0);
+             ui.vertical(|ui| {
+-                ui.label(RichText::new(title).font(theme::semibold(15.0)).color(t.text));
++                ui.set_width(title_width);
++                ui.add(egui::Label::new(RichText::new(title).font(theme::semibold(15.0)).color(t.text)).truncate());
+                 // Where the page is, under its name (File › Export), so a deep page never loses its place.
+                 if !searching && path.len() > 1 {
+                     let trail: Vec<&str> = path[..path.len() - 1].iter().map(|p| i18n::tr(lang, p)).collect();
+@@ -1286,18 +1375,35 @@ fn menu_row(ui: &mut egui::Ui, label: &str, detail: &str, checked: bool, enabled
+         x += 26.0;
+     }
+     let painter = ui.painter();
++    // A translated command may be much longer than its English label. Reserve the chevron's
++    // space and elide within it, rather than painting through the arrow or outside the sheet.
++    let text_right = rect.right() - if submenu { 36.0 } else { 14.0 };
++    let text_width = (text_right - x).max(0.0);
++    let text_painter = painter.with_clip_rect(egui::Rect::from_min_max(egui::pos2(x, rect.top()), egui::pos2(text_right.max(x), rect.bottom())));
+     if detail.is_empty() {
+-        painter.text(egui::pos2(x, rect.center().y), egui::Align2::LEFT_CENTER, label, theme::medium(15.0), ink);
++        paint_line(&text_painter, egui::pos2(x, rect.center().y), label, theme::medium(15.0), ink, text_width);
+     } else {
+-        painter.text(egui::pos2(x, rect.top() + 17.0), egui::Align2::LEFT_CENTER, label, theme::medium(14.0), ink);
++        paint_line(&text_painter, egui::pos2(x, rect.top() + 17.0), label, theme::medium(14.0), ink, text_width);
+         let font = egui::FontId::proportional(11.5);
+-        painter.text(egui::pos2(x, rect.top() + 37.0), egui::Align2::LEFT_CENTER, detail, font, t.text_faint);
++        paint_line(&text_painter, egui::pos2(x, rect.top() + 37.0), detail, font, t.text_faint, text_width);
+     }
+     if submenu {
+         chevron(painter, egui::pos2(rect.right() - 18.0, rect.center().y), true, t.text_dim);
+     }
+     painter.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(1.0, t.separator));
+-    resp
++    resp.on_hover_text(if detail.is_empty() { label.to_string() } else { format!("{label}\n{detail}") })
++}
++
++/// One bounded line, vertically centred at `at`. The full text remains the widget's accessible label.
++fn paint_line(painter: &egui::Painter, at: egui::Pos2, text: &str, font: egui::FontId, color: egui::Color32, width: f32) {
++    if width <= 0.0 {
++        return;
++    }
++    let mut job = egui::text::LayoutJob::simple_singleline(text.to_string(), font, color);
++    job.wrap = egui::text::TextWrapping::truncate_at_width(width);
++    let galley = painter.layout_job(job);
++    let origin = at - vec2(0.0, galley.size().y * 0.5);
++    painter.galley(origin, galley, color);
+ }
+ 
+ /// A chevron pointing forward (a submenu's row) or back (a page's back button).
+@@ -1376,23 +1482,20 @@ fn menu_footer_controls(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     // 1) Debug (.txt log) toggle row.
+     let debug_on = photocraft_doc::diag::enabled();
+     let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), MENU_ROW), Sense::click());
+-    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, debug_on, "Debug"));
++    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, debug_on, AndroidLabel::Debug.text()));
+     if resp.hovered() {
+         ui.painter().rect_filled(rect, t.radius_sm, t.hover);
+     }
+-    let detail = if debug_on {
+-        "Saving .txt logs in Downloads/PhotoCraft"
+-    } else {
+-        "Off — .txt log files removed"
+-    };
++    let detail = if debug_on { AndroidLabel::SavingLogs.text() } else { AndroidLabel::LogsOff.text() };
+     let x = rect.left() + 14.0;
+-    ui.painter().text(egui::pos2(x, rect.top() + 17.0), egui::Align2::LEFT_CENTER, "Debug", theme::medium(14.0), t.text);
+-    ui.painter().text(egui::pos2(x, rect.top() + 37.0), egui::Align2::LEFT_CENTER, detail, egui::FontId::proportional(11.5), t.text_faint);
+     let badge = egui::Rect::from_center_size(egui::pos2(rect.right() - 38.0, rect.center().y), vec2(52.0, 26.0));
++    let text_width = (badge.left() - x - 8.0).max(0.0);
++    paint_line(ui.painter(), egui::pos2(x, rect.top() + 17.0), AndroidLabel::Debug.text(), theme::medium(14.0), t.text, text_width);
++    paint_line(ui.painter(), egui::pos2(x, rect.top() + 37.0), detail, egui::FontId::proportional(11.5), t.text_faint, text_width);
+     let (bg, border, fg, state_text) = if debug_on {
+-        (t.accent_soft, t.accent_border, t.accent_text, "ON")
++        (t.accent_soft, t.accent_border, t.accent_text, AndroidLabel::On.text())
+     } else {
+-        (t.field, t.field_border, t.text_dim, "OFF")
++        (t.field, t.field_border, t.text_dim, AndroidLabel::Off.text())
+     };
+     ui.painter().rect_filled(badge, t.radius_sm, bg);
+     ui.painter().rect_stroke(badge, t.radius_sm, Stroke::new(1.0, border), egui::StrokeKind::Inside);
+@@ -1407,14 +1510,16 @@ fn menu_footer_controls(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     let max_cores = photocraft_doc::cpu::max_cores();
+     let active_cores = photocraft_doc::cpu::active_cores();
+     let (cpu_rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), MENU_ROW), Sense::hover());
+-    let cores_detail = format!("{active_cores} / {max_cores} active cores");
+-    ui.painter().text(egui::pos2(cpu_rect.left() + 14.0, cpu_rect.top() + 17.0), egui::Align2::LEFT_CENTER, "CPU Cores", theme::medium(14.0), t.text);
+-    ui.painter().text(
++    let cores_detail = i18n::fmt(AndroidLabel::ActiveCores.text(), &[("active_cores", &active_cores.to_string()), ("max_cores", &max_cores.to_string())]);
++    let text_width = (cpu_rect.width() - 142.0).max(0.0);
++    paint_line(ui.painter(), egui::pos2(cpu_rect.left() + 14.0, cpu_rect.top() + 17.0), AndroidLabel::CpuCores.text(), theme::medium(14.0), t.text, text_width);
++    paint_line(
++        ui.painter(),
+         egui::pos2(cpu_rect.left() + 14.0, cpu_rect.top() + 37.0),
+-        egui::Align2::LEFT_CENTER,
+         &cores_detail,
+         egui::FontId::proportional(11.5),
+         t.text_faint,
++        text_width,
+     );
+     let can_dec = active_cores > 1;
+     let can_inc = active_cores < max_cores;
+@@ -1423,7 +1528,7 @@ fn menu_footer_controls(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     let inc_rect = egui::Rect::from_center_size(egui::pos2(cpu_rect.right() - 24.0, cpu_rect.center().y), vec2(34.0, 34.0));
+ 
+     let dec_resp = ui.interact(dec_rect, ui.id().with("cpu-dec"), Sense::click());
+-    dec_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, can_dec, "Decrease CPU cores"));
++    dec_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, can_dec, AndroidLabel::DecreaseCores.text()));
+     ui.painter().rect_filled(dec_rect, t.radius_sm, if can_dec && dec_resp.hovered() { t.hover } else { t.field });
+     ui.painter().rect_stroke(dec_rect, t.radius_sm, Stroke::new(1.0, t.field_border), egui::StrokeKind::Inside);
+     ui.painter().text(dec_rect.center(), egui::Align2::CENTER_CENTER, "−", theme::semibold(16.0), if can_dec { t.text } else { t.text_faint });
+@@ -1434,7 +1539,7 @@ fn menu_footer_controls(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+     ui.painter().text(count_center, egui::Align2::CENTER_CENTER, format!("{active_cores}"), theme::semibold(14.0), t.text);
+ 
+     let inc_resp = ui.interact(inc_rect, ui.id().with("cpu-inc"), Sense::click());
+-    inc_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, can_inc, "Increase CPU cores"));
++    inc_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, can_inc, AndroidLabel::IncreaseCores.text()));
+     ui.painter().rect_filled(inc_rect, t.radius_sm, if can_inc && inc_resp.hovered() { t.hover } else { t.field });
+     ui.painter().rect_stroke(inc_rect, t.radius_sm, Stroke::new(1.0, t.field_border), egui::StrokeKind::Inside);
+     ui.painter().text(inc_rect.center(), egui::Align2::CENTER_CENTER, "+", theme::semibold(16.0), if can_inc { t.text } else { t.text_faint });
+@@ -1478,6 +1583,131 @@ fn menu_footer_controls(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn photodroid_android_copy_is_complete_in_korean_with_an_english_fallback() {
++        let ko = i18n::Lang::from_code("ko").expect("Korean is registered");
++        for label in [
++            AndroidLabel::TextInput,
++            AndroidLabel::RightClick,
++            AndroidLabel::PrecisePointer,
++            AndroidLabel::Debug,
++            AndroidLabel::SavingLogs,
++            AndroidLabel::LogsOff,
++            AndroidLabel::CpuCores,
++            AndroidLabel::ActiveCores,
++            AndroidLabel::DecreaseCores,
++            AndroidLabel::IncreaseCores,
++            AndroidLabel::On,
++            AndroidLabel::Off,
++        ] {
++            assert!(i18n::has(ko, label.source()), "missing Korean Android copy for {label:?}");
++            i18n::with_language(ko, || assert_ne!(label.text(), label.source(), "{label:?}"));
++            i18n::with_language(i18n::Lang::EN, || assert_eq!(label.text(), label.source(), "{label:?}"));
++        }
++    }
++
++    #[test]
++    fn the_top_bar_keeps_its_touch_targets_inside_narrow_phones() {
++        use egui_kittest::{Harness, kittest::Queryable};
++        for width in [320.0, 411.0, 667.0] {
++            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
++            app.ui.status = "사진의 긴 한국어 상태 문구가 버튼을 화면 밖으로 밀어내지 않아야 합니다".into();
++            let mut h = Harness::builder().with_size(vec2(width, 300.0)).build_ui_state(
++                |ui, app: &mut PhotocraftApp| {
++                    if fonts_bound(ui.ctx()) {
++                        top_bar(app, ui)
++                    }
++                },
++                app,
++            );
++            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
++            h.run_steps(4);
++            let mut labels = vec!["Menu", "Undo", "Redo", "Panels"];
++            if width < 440.0 {
++                labels.push("Tools");
++            } else {
++                labels.extend(["Virtual mouse", "Magnifier", "Virtual keyboard"]);
++            }
++            for label in labels {
++                let rect = h.get_by_label(label).rect();
++                assert!(rect.left() >= 0.0 && rect.right() <= width, "{label} is clipped at {width}pt: {rect:?}");
++                assert!(rect.width() >= TOUCH && rect.height() >= TOUCH, "{label} keeps its touch target: {rect:?}");
++            }
++        }
++    }
++
++    #[test]
++    fn the_phone_can_return_from_the_shortcut_keyboard_to_native_text_input() {
++        use egui_kittest::{Harness, kittest::Queryable};
++        let asked = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
++        let log = asked.clone();
++        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
++        app.services.soft_keyboard = Some(Box::new(move |show| log.borrow_mut().push(show)));
++        app.session.execute("file.new", json!({"width": 400, "height": 200})).unwrap();
++        app.sync_views();
++        app.ui.tool = crate::state::Tool::Type;
++        app.virtual_input.set_keyboard(true);
++        crate::type_tool::pointer_up(&mut app, [50.0, 100.0], [50.0, 100.0]);
++        assert!(app.ui.text_edit.is_some());
++        // The regular per-frame logic previously hid native input while shortcut keys were on.
++        assert_eq!(app.virtual_input.ime_request(true), Some(false));
++        let mut h = Harness::builder().with_size(vec2(320.0, 600.0)).build_ui_state(
++            |ui, app: &mut PhotocraftApp| {
++                if fonts_bound(ui.ctx()) {
++                    top_bar(app, ui)
++                }
++            },
++            app,
++        );
++        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
++        h.run_steps(4);
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
++        h.get_by_label("Text input").click();
++        h.run_steps(2);
++        assert!(!h.state().virtual_input.keyboard_on());
++        assert_eq!(*asked.borrow(), [true]);
++        let ctx = h.ctx.clone();
++        virtual_input::logic(h.state_mut(), &ctx);
++        assert_eq!(*asked.borrow(), [true], "a delayed frame after cancellation cannot reopen the native dialog");
++    }
++
++    #[test]
++    fn long_translated_menu_rows_leave_room_for_the_submenu_arrow() {
++        use egui_kittest::{Harness, kittest::Queryable};
++        const LABEL: &str = "선택한 레이어를 모두 복사하여 새 스마트 오브젝트로 변환하기";
++        const DETAIL: &str = "레이어 › 스마트 오브젝트 › 선택한 여러 레이어의 내용으로 새 문서 만들기";
++        let mut h = Harness::builder().with_size(vec2(320.0, 300.0)).build_ui(|ui| {
++            if fonts_bound(ui.ctx()) {
++                menu_row(ui, LABEL, DETAIL, true, true, true);
++            }
++        });
++        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
++        h.run_steps(4);
++        let row = h.get_by_label(LABEL).rect();
++        for line in [LABEL, DETAIL] {
++            let (clip, text) = h
++                .output()
++                .shapes
++                .iter()
++                .find_map(|shape| match &shape.shape {
++                    egui::Shape::Text(text) if text.galley.job.text == line => Some((shape.clip_rect, text)),
++                    _ => None,
++                })
++                .expect("the translated line is painted");
++            assert!(clip.right() <= row.right() - 30.0, "text cannot paint over the submenu arrow");
++            assert!(text.galley.size().x <= clip.width() + 1.0, "the label is elided to its available width");
++        }
++    }
++
++    #[test]
++    fn the_menu_fits_the_content_left_by_the_android_and_shortcut_keyboards() {
++        assert_eq!(menu_height(200.0, 0.0), 160.0, "a short landscape viewport has no 260pt minimum");
++        assert_eq!(menu_height(600.0, 0.0), 480.0);
++        assert_eq!(menu_height(600.0, 240.0), 344.0, "the app keyboard leaves a gap above it");
++        assert_eq!(menu_height(200.0, 240.0), 0.0, "there is never a negative allocation");
++    }
++
+     /// Whether the phone's fonts are bound yet: the first frame of a harness runs before `setup_context`
+     /// takes effect, so a test draws nothing until they are (as the app draws nothing until its fonts are ready).
+     fn fonts_bound(ctx: &egui::Context) -> bool {
+@@ -1488,18 +1718,29 @@ mod tests {
+     fn the_top_bar_toggles_the_virtual_keyboard_and_the_virtual_mouse() {
+         use egui_kittest::{Harness, kittest::Queryable};
+         let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+-        let mut h = Harness::builder()
+-            .with_size(vec2(411.0, 300.0))
+-            .build_ui_state(|ui, app: &mut PhotocraftApp| if fonts_bound(ui.ctx()) { top_bar(app, ui) }, app);
++        let mut h = Harness::builder().with_size(vec2(411.0, 300.0)).build_ui_state(
++            |ui, app: &mut PhotocraftApp| {
++                if fonts_bound(ui.ctx()) {
++                    top_bar(app, ui)
++                }
++            },
++            app,
++        );
+         PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+         h.run_steps(4);
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Virtual keyboard").click();
+         h.run_steps(2);
+         assert!(h.state().virtual_input.keyboard_on());
+         assert!(!h.state().virtual_mouse.is_on());
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Virtual mouse").click();
+         h.run_steps(2);
+         assert!(h.state().virtual_mouse.is_on());
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Virtual keyboard").click();
+         h.run_steps(2);
+         assert!(!h.state().virtual_input.keyboard_on());
+@@ -1510,17 +1751,28 @@ mod tests {
+     fn the_top_bar_magnifier_turns_the_loupe_on_with_the_pointer() {
+         use egui_kittest::{Harness, kittest::Queryable};
+         let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+-        let mut h = Harness::builder()
+-            .with_size(vec2(411.0, 300.0))
+-            .build_ui_state(|ui, app: &mut PhotocraftApp| if fonts_bound(ui.ctx()) { top_bar(app, ui) }, app);
++        let mut h = Harness::builder().with_size(vec2(411.0, 300.0)).build_ui_state(
++            |ui, app: &mut PhotocraftApp| {
++                if fonts_bound(ui.ctx()) {
++                    top_bar(app, ui)
++                }
++            },
++            app,
++        );
+         PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+         h.run_steps(4);
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Virtual mouse").click();
+         h.run_steps(2);
+         assert!(h.state().virtual_mouse.is_on());
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Magnifier").click();
+         h.run_steps(2);
+         assert!(h.state().virtual_mouse.magnifier_on(), "the top bar's magnifier turns the loupe on");
++        h.get_by_label("Tools").click();
++        h.run_steps(2);
+         h.get_by_label("Magnifier").click();
+         h.run_steps(2);
+         assert!(!h.state().virtual_mouse.magnifier_on(), "the second tap turns the loupe off");
+diff --git a/crates/ui-egui/src/virtual_input.rs b/crates/ui-egui/src/virtual_input.rs
+index e2ae3ea..09e95ac 100644
+--- a/crates/ui-egui/src/virtual_input.rs
++++ b/crates/ui-egui/src/virtual_input.rs
+@@ -324,7 +324,10 @@ pub fn lift(app: &PhotocraftApp) -> f32 {
+ /// Each frame: the system keyboard is asked away from (or back to) a text field, and the keyboard's Persian
+ /// letters get their font once it is on.
+ pub fn logic(app: &mut PhotocraftApp, ctx: &egui::Context) {
+-    if let Some(show) = app.virtual_input.ime_request(ctx.egui_wants_keyboard_input())
++    // The on-canvas Type tool has its own editor, not an egui TextEdit. Count it too so closing
++    // the shortcut keyboard restores native text input while a text layer is active.
++    let typing = ctx.egui_wants_keyboard_input() || app.ui.text_edit.is_some();
++    if let Some(show) = app.virtual_input.ime_request(typing)
+         && let Some(ask) = app.services.soft_keyboard.as_mut()
+     {
+         ask(show);
+diff --git a/crates/ui-egui/src/virtual_input/tests.rs b/crates/ui-egui/src/virtual_input/tests.rs
+index 14ba89a..264299e 100644
+--- a/crates/ui-egui/src/virtual_input/tests.rs
++++ b/crates/ui-egui/src/virtual_input/tests.rs
+@@ -219,6 +219,29 @@ fn the_system_keyboard_comes_back_if_the_on_screen_one_goes_during_a_focus() {
+     assert_eq!(vi.ime_request(false), None);
+ }
+ 
++#[test]
++fn the_canvas_type_editor_restores_native_input_when_the_shortcut_keyboard_closes() {
++    let asked = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
++    let log = asked.clone();
++    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
++    app.services.soft_keyboard = Some(Box::new(move |show| log.borrow_mut().push(show)));
++    app.session.execute("file.new", serde_json::json!({"width": 400, "height": 200})).unwrap();
++    app.sync_views();
++    app.ui.tool = crate::state::Tool::Type;
++    app.virtual_input.set_keyboard(true);
++    crate::type_tool::pointer_up(&mut app, [50.0, 100.0], [50.0, 100.0]);
++    assert!(app.ui.text_edit.is_some());
++    let ctx = egui::Context::default();
++    assert!(!ctx.egui_wants_keyboard_input(), "the canvas editor is independent of egui TextEdit focus");
++    logic(&mut app, &ctx);
++    logic(&mut app, &ctx);
++    assert_eq!(*asked.borrow(), [false], "the native keyboard is hidden only once");
++    app.virtual_input.set_keyboard(false);
++    logic(&mut app, &ctx);
++    logic(&mut app, &ctx);
++    assert_eq!(*asked.borrow(), [false, true], "closing shortcut keys requests native text input once");
++}
++
+ #[test]
+ fn turning_the_keyboard_off_lets_go_of_the_modifiers() {
+     let mut vi = VirtualInput::default();

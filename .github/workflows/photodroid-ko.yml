@@ -1,0 +1,158 @@
+name: PhotoDroid Korean APK
+
+on:
+  push:
+    branches: [photodroid-ko]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: photodroid-ko-release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_INCREMENTAL: '0'
+  CARGO_BUILD_JOBS: '2'
+  CARGO_PROFILE_TEST_DEBUG: '0'
+  CARGO_PROFILE_DEV_DEBUG: '0'
+
+jobs:
+  tests:
+    name: Korean font, protocol and mobile UI tests
+    if: github.ref == 'refs/heads/photodroid-ko'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare the pinned source and verified Korean font
+        run: bash photodroid/scripts/prepare-source.sh
+      - name: Install the pinned Rust toolchain
+        run: |
+          source photodroid/scripts/config.sh
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+      - name: Install host UI build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pkg-config libxkbcommon-dev libwayland-dev libegl1-mesa-dev libxcb-shape0-dev libxcb-xfixes0-dev libvulkan1 mesa-vulkan-drivers
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            source/target
+          key: photodroid-host-${{ runner.os }}-rust1.99.1-${{ hashFiles('source/Cargo.lock', 'photodroid/ko.patch') }}
+          restore-keys: photodroid-host-${{ runner.os }}-rust1.99.1-
+      - name: Run the targeted tests
+        run: bash photodroid/scripts/test-targeted.sh
+      - name: Keep the test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoDroid-ko-test-log
+          path: ${{ runner.temp }}/photodroid-tests.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+  apk:
+    name: Signed arm64 APK and complete source archive
+    if: github.ref == 'refs/heads/photodroid-ko'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Refuse to replace an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source photodroid/scripts/config.sh
+          python3 photodroid/scripts/check-release.py
+      - name: Prepare the pinned source and verified Korean font
+        run: bash photodroid/scripts/prepare-source.sh
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Install the pinned Android SDK and NDK
+        run: bash photodroid/scripts/install-android.sh
+      - name: Install the pinned Rust toolchain
+        run: |
+          source photodroid/scripts/config.sh
+          rustup toolchain install "$RUST_VERSION" --profile minimal --target aarch64-linux-android
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            source/target
+          key: photodroid-arm64-${{ runner.os }}-rust1.99.1-ndk27-16k-${{ hashFiles('source/Cargo.lock', 'photodroid/ko.patch') }}
+          restore-keys: photodroid-arm64-${{ runner.os }}-rust1.99.1-ndk27-16k-
+      - name: Build and strip the native library with 16 KB alignment
+        run: bash photodroid/scripts/build-native.sh
+      - name: Package the complete corresponding source
+        run: |
+          source photodroid/scripts/config.sh
+          python3 photodroid/scripts/package-source.py
+      - name: Sign, assemble and verify the APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash photodroid/scripts/sign-package.sh
+      - name: Keep only the encrypted initial signing-key backup
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoDroid-signing-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/photodroid-signing-backup/PhotoDroid-signing-backup.cms
+            ${{ runner.temp }}/photodroid-signing-backup/BACKUP-INFO.txt
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Keep the verified release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoDroid-ko-release-files
+          path: |
+            dist/PhotoDroid-KO-0.3.0-ko.1-arm64.apk
+            dist/PhotoDroid-KO-0.3.0-ko.1-source.zip
+            dist/BUILD-INFO.txt
+            dist/APK-VERIFICATION.txt
+            dist/SHA256SUMS
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+
+  release:
+    name: Publish only after the APK and tests pass
+    needs: [tests, apk]
+    if: github.ref == 'refs/heads/photodroid-ko'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: PhotoDroid-ko-release-files
+          path: dist
+      - name: Verify the checksums and create a new release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash photodroid/scripts/publish-release.sh
