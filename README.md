@@ -8,10 +8,14 @@ A clean-room calculator for Android/Galaxy S26 inspired by the overall visual co
 - Scientific keypad: parentheses, memory (mc/m+/m-/mr), powers, roots, ln/log, trigonometry and inverse functions (2nd), hyperbolic functions, pi/e, factorial, and Deg/Rad toggle.
 - Calculation history: up to 200 records locally, tap to reload, individual deletion, clear all.
 - Offline unit conversions: length, mass, temperature, area, volume, time, speed, data, pressure, energy.
-- Currency conversion: direct **European Central Bank** published daily reference-rate download, offline cache of the last downloaded dated rates, and explicit no-quote state when unavailable. ECB rates are indicative reference rates, not executable exchange quotes.
+- Currency conversion: **Hana Bank API On–compatible** read-only HTTPS adapter, explicit link setup, dated cached rates, separate mid-market / cash / remittance transaction directions, and fail-closed no-quote behavior. **Live Hana rates require bank authorization and a privately hosted adapter; the app does not provide unsanctioned live quotes.**
 - Math Notes **subset**: typed expressions, variables, live results, and a basic two-dimensional graph `y=f(x)`.
 - Haptic key feedback, landscape scientific layout, dark UI, local data storage.
 - Android unit tests for arithmetic correctness.
+
+## Hana Bank exchange rate integration
+
+Hana API On advertises 58-currency rate service, subject to signup and approval. The app includes a currency tab and an adapter client, but no Hana API key is available, so **real-time bank data is not enabled out of the box**. No estimates, ECB fallback, scraped Hana pages, or fabricated rates are presented as bank rates. Configure your own authorized HTTPS adapter in `환율 → ⚙ 연결 설정`. See [adapter schema and guidance](docs/hana-adapter.md).
 
 ## Not yet at iOS 26 parity
 

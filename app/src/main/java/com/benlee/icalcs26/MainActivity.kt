@@ -213,6 +213,10 @@ private fun CalculatorRoot() {
     var toIndex by remember { mutableIntStateOf(1) }
     var rateSnapshot by remember { mutableStateOf<RateSnapshot?>(null) }
     var loadingRates by remember { mutableStateOf(false) }
+    var showHanaSettings by remember { mutableStateOf(false) }
+    var hanaEndpoint by remember { mutableStateOf(CurrencyRates.endpoint(context)) }
+    var endpointError by remember { mutableStateOf("") }
+    var hanaRateMode by remember { mutableStateOf(HanaRateMode.BASE) }
     val scope = rememberCoroutineScope()
     val view = LocalView.current
 
@@ -220,7 +224,7 @@ private fun CalculatorRoot() {
     fun openMode(mode: CalcMode) { model.mode = mode; showModes = false; showHistory = false }
 
     LaunchedEffect(model.convert) {
-        if (model.convert && rateSnapshot == null) {
+        if (model.convert && rateSnapshot == null && CurrencyRates.endpoint(context).isNotBlank()) {
             loadingRates = true
             rateSnapshot = CurrencyRates.refresh(context)
             loadingRates = false
@@ -251,6 +255,33 @@ private fun CalculatorRoot() {
                 }
             }
         }
+        if (showHanaSettings) {
+            AlertDialog(
+                onDismissRequest = { showHanaSettings = false },
+                title = { Text("하나은행 환율 연결") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("하나 API On의 이용 승인을 받은 뒤, 공식 데이터를 전달하는 본인 소유 HTTPS 중계 주소를 입력하세요. 앱에 API 인증키를 저장하지 않습니다.", fontSize = 13.sp)
+                        OutlinedTextField(value = hanaEndpoint, onValueChange = { hanaEndpoint = it; endpointError = "" },
+                            label = { Text("HTTPS 환율 중계 주소") }, singleLine = true,
+                            placeholder = { Text("https://.../rates") })
+                        if (endpointError.isNotBlank()) Text(endpointError, color = Orange, fontSize = 12.sp)
+                        Text("승인 전에는 환율 수치를 임의 생성하지 않습니다. 공식 하나은행 API 발급: apiportal.hanabank.com", fontSize = 12.sp, color = Soft)
+                    }
+                },
+                confirmButton = { TextButton(onClick = {
+                    runCatching { CurrencyRates.configure(context, hanaEndpoint) }.onSuccess {
+                        showHanaSettings = false; rateSnapshot = null
+                        if (hanaEndpoint.isNotBlank()) scope.launch {
+                            loadingRates = true
+                            rateSnapshot = CurrencyRates.refresh(context)
+                            loadingRates = false
+                        }
+                    }.onFailure { endpointError = it.message ?: "주소를 확인하세요" }
+                }) { Text("저장", color = Orange) } },
+                dismissButton = { TextButton(onClick = { showHanaSettings = false }) { Text("취소") } }
+            )
+        }
         when {
             showHistory -> HistoryPage(model, onClose = { showHistory = false })
             model.mode == CalcMode.NOTES -> NotesPage(noteText, onChange = {
@@ -269,7 +300,9 @@ private fun CalculatorRoot() {
                     if (model.convert) {
                         ConversionPanel(model, categoryIndex, onCategory = { new ->
                             categoryIndex = new; fromIndex = 0; toIndex = 1
-                        }, fromIndex, { fromIndex = it }, toIndex, { toIndex = it }, rateSnapshot, loadingRates,
+                        }, fromIndex, { fromIndex = it }, toIndex, { toIndex = it }, rateSnapshot, loadingRates, hanaRateMode,
+                            onRateMode = { hanaRateMode = it },
+                            onConfigure = { hanaEndpoint = CurrencyRates.endpoint(context); showHanaSettings = true },
                             onRefresh = {
                                 scope.launch { loadingRates = true; rateSnapshot = CurrencyRates.refresh(context); loadingRates = false }
                             })
@@ -436,13 +469,18 @@ private fun UnitDropdown(title: String, options: List<String>, selected: Int, on
 private fun ConversionPanel(
     model: CalcModel, categoryIndex: Int, onCategory: (Int) -> Unit,
     fromIndex: Int, onFrom: (Int) -> Unit, toIndex: Int, onTo: (Int) -> Unit,
-    rates: RateSnapshot?, loading: Boolean, onRefresh: () -> Unit
+    rates: RateSnapshot?, loading: Boolean,
+    rateMode: HanaRateMode, onRateMode: (HanaRateMode) -> Unit,
+    onConfigure: () -> Unit, onRefresh: () -> Unit
 ) {
     val category = Converter.categories[categoryIndex]
     val from = category.units[fromIndex.coerceIn(category.units.indices)]
     val to = category.units[toIndex.coerceIn(category.units.indices)]
     val value = model.value()
-    val output = value?.let { Converter.convert(it, category, from, to, rates?.rates ?: emptyMap()) }
+    val output = value?.let {
+        if (category.name == "환율") rates?.convert(it, from.symbol, to.symbol, rateMode)
+        else Converter.convert(it, category, from, to)
+    }
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             UnitDropdown("유형", Converter.categories.map { it.name }, categoryIndex, onCategory, Modifier.weight(0.8f))
@@ -459,13 +497,28 @@ private fun ConversionPanel(
         Text(if (output != null) "${CalcEngine.format(output)} ${to.symbol}" else "— ${to.symbol}",
             color = Orange, fontSize = 27.sp, fontWeight = FontWeight.Light, maxLines = 1)
         if (category.name == "환율") {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                HanaRateMode.entries.forEach { type ->
+                    val active = type == rateMode
+                    Text(type.label, fontSize = 11.sp, color = if (active) Color.Black else Color.White,
+                        modifier = Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (active) Orange else Scientific)
+                            .clickable { onRateMode(type) }.padding(horizontal = 8.dp, vertical = 8.dp))
+                }
+            }
             Text(when {
-                loading -> "유럽중앙은행 환율 확인 중…"
-                rates == null -> "환율 조회 실패 · 인터넷 연결을 확인하세요"
-                rates.isCached -> "ECB ${rates.date} 기준 저장 환율 · 최신값이 아닐 수 있음  ↻"
-                else -> "ECB ${rates.date} 기준 환율  ↻"
-            }, color = Soft, fontSize = 11.sp,
-                modifier = Modifier.clickable(onClick = onRefresh))
+                loading -> "하나은행 환율 확인 중…"
+                rates == null -> "하나은행 공식 환율 미연결 · 설정 필요"
+                rates.isCached -> "하나은행 ${rates.date} · 저장된 환율 (최신 아님)"
+                else -> "하나은행 ${rates.date} · 조회 완료"
+            }, color = Soft, fontSize = 11.sp, maxLines = 2)
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                Text("⚙ 연결 설정", color = Orange, fontSize = 12.sp,
+                    modifier = Modifier.clickable(onClick = onConfigure))
+                Text("↻ 새로고침", color = Orange, fontSize = 12.sp,
+                    modifier = Modifier.clickable(onClick = onRefresh))
+            }
+            Text("고시환율 참고값 · 우대율·수수료 미반영 · 실제 거래환율과 다를 수 있음", color = Soft, fontSize = 10.sp)
         }
     }
 }

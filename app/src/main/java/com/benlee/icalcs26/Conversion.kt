@@ -4,8 +4,6 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -76,7 +74,7 @@ object Converter {
         if (category.name == "환율") {
             val f = rates[from.symbol] ?: return null
             val t = rates[to.symbol] ?: return null
-            return value / f * t
+            return value * f / t
         }
         if (category.name == "온도") {
             val c = when (from.symbol) { "°C" -> value; "°F" -> (value-32.0)*5.0/9.0; else -> value-273.15 }
@@ -86,46 +84,109 @@ object Converter {
     }
 }
 
-data class RateSnapshot(val rates: Map<String, Double>, val date: String, val isCached: Boolean)
+/**
+ * Official Hana API On is approval-based. The phone ONLY calls a user-configured
+ * HTTPS adapter owned by the user; it does not scrape the bank or embed a secret.
+ * Expected adapter response is documented in docs/hana-adapter.md.
+ */
+data class HanaQuote(
+    val base: Double,
+    val cashBuy: Double?, val cashSell: Double?,
+    val remitSend: Double?, val remitReceive: Double?
+)
+
+enum class HanaRateMode(val label: String) {
+    BASE("매매기준율"), CASH("현찰 거래"), REMIT("송금 거래")
+}
+
+data class RateSnapshot(
+    val quotes: Map<String, HanaQuote>, val date: String,
+    val isCached: Boolean, val source: String = "하나은행"
+) {
+    val rates: Map<String, Double> get() = quotes.mapValues { it.value.base }
+    /** The chosen direction matters: cash buy and sell are not interchangeable. */
+    fun convert(value: Double, from: String, to: String, mode: HanaRateMode): Double? {
+        val base = quotes[from] ?: return null
+        val target = quotes[to] ?: return null
+        if (!value.isFinite()) return null
+        if (from == to) return value
+        val won = when(mode) {
+            HanaRateMode.BASE -> value * base.base
+            HanaRateMode.CASH -> value * (base.cashSell ?: return null)
+            HanaRateMode.REMIT -> value * (base.remitReceive ?: return null)
+        }
+        val divisor = when(mode) {
+            HanaRateMode.BASE -> target.base
+            HanaRateMode.CASH -> target.cashBuy ?: return null
+            HanaRateMode.REMIT -> target.remitSend ?: return null
+        }
+        return if (divisor > 0) won / divisor else null
+    }
+}
 
 object CurrencyRates {
-    private const val SOURCE = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
-    private const val PREFS = "icalc_rates"
+    private const val PREFS = "icalc_hana_rates"
+    private const val MAX_BYTES = 180_000
+    fun endpoint(context: Context): String = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        .getString("adapter_endpoint", "") ?: ""
+    fun configure(context: Context, url: String) {
+        val normalized = url.trim()
+        require(normalized.isEmpty() || (normalized.startsWith("https://") &&
+                URL(normalized).host.isNotBlank() && URL(normalized).userInfo == null)) {
+            "HTTPS 주소만 입력할 수 있습니다"
+        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString("adapter_endpoint", normalized)
+            .remove("snapshot").remove("snapshot_endpoint").apply()
+    }
+    private fun parse(body: String, isCached: Boolean): RateSnapshot {
+        val json = JSONObject(body)
+        require(json.optString("provider") == "HANA_BANK") { "하나은행 출처 표기가 없습니다" }
+        val publishedAt = json.getString("publishedAt")
+        require(publishedAt.matches(Regex("\\d{4}-\\d{2}-\\d{2}T.+"))) { "고시 날짜 정보가 잘못되었습니다" }
+        val entries = json.getJSONArray("rates")
+        val quotes = mutableMapOf("KRW" to HanaQuote(1.0,1.0,1.0,1.0,1.0))
+        fun positive(obj: JSONObject, field: String): Double? = if (obj.isNull(field) || !obj.has(field)) null
+            else obj.optDouble(field).takeIf { it.isFinite() && it > 0 }
+        for (i in 0 until entries.length()) {
+            val e = entries.getJSONObject(i)
+            val currency = e.getString("currency").uppercase(java.util.Locale.ROOT)
+            if (!currency.matches(Regex("[A-Z]{3}")) || currency == "KRW") continue
+            val unit = e.optDouble("unit", 1.0)
+            if (!unit.isFinite() || unit <= 0) continue
+            fun scaled(field: String) = positive(e, field)?.div(unit)
+            val base = scaled("baseRate") ?: continue
+            quotes[currency] = HanaQuote(base, scaled("cashBuy"), scaled("cashSell"),
+                scaled("remitSend"), scaled("remitReceive"))
+        }
+        require(quotes.size > 1) { "환율 데이터가 비어 있습니다" }
+        return RateSnapshot(quotes, publishedAt, isCached)
+    }
     suspend fun refresh(context: Context): RateSnapshot? = withContext(Dispatchers.IO) {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val cached = try {
-            val obj = JSONObject(prefs.getString("rates", "{}") ?: "{}")
-            val map = mutableMapOf("EUR" to 1.0)
-            obj.keys().forEach { k -> map[k] = obj.getDouble(k) }
-            if (map.size > 1) RateSnapshot(map, prefs.getString("date", "") ?: "", true) else null
-        } catch (_: Exception) { null }
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val endpoint = endpoint(context)
+        if (endpoint.isEmpty()) return@withContext null
+        val cached = preferences.getString("snapshot", null)
+            ?.takeIf { preferences.getString("snapshot_endpoint", null) == endpoint }
+            ?.let { runCatching { parse(it, true) }.getOrNull() }
         try {
-            val conn = URL(SOURCE).openConnection() as HttpURLConnection
-            conn.connectTimeout = 6000
-            conn.readTimeout = 6000
-            conn.setRequestProperty("User-Agent", "iCalcS26/1.0")
+            val url = URL(endpoint)
+            require(url.protocol == "https" && url.userInfo == null)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.connectTimeout = 6500
+            connection.readTimeout = 6500
+            connection.instanceFollowRedirects = false
+            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("User-Agent", "iCalcS26/1.1")
             try {
-                if (conn.responseCode !in 200..299) return@withContext cached
-                val parser = XmlPullParserFactory.newInstance().newPullParser()
-                conn.inputStream.use { parser.setInput(it, "UTF-8")
-                    val map = mutableMapOf("EUR" to 1.0)
-                    var date = ""
-                    while (parser.eventType != XmlPullParser.END_DOCUMENT) {
-                        if (parser.eventType == XmlPullParser.START_TAG && parser.name == "Cube") {
-                            parser.getAttributeValue(null, "time")?.let { date = it }
-                            val currency = parser.getAttributeValue(null, "currency")
-                            val rate = parser.getAttributeValue(null, "rate")?.toDoubleOrNull()
-                            if (currency != null && rate != null && rate > 0) map[currency] = rate
-                        }
-                        parser.next()
-                    }
-                    if (map.size < 5) return@withContext cached
-                    val obj = JSONObject()
-                    map.forEach { (k,v) -> obj.put(k,v) }
-                    prefs.edit().putString("rates", obj.toString()).putString("date", date).apply()
-                    RateSnapshot(map, date, false)
-                }
-            } finally { conn.disconnect() }
+                if (connection.responseCode != 200) return@withContext cached
+                val content = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                if (content.length > MAX_BYTES) return@withContext cached
+                val snapshot = parse(content, false)
+                preferences.edit().putString("snapshot", content)
+                    .putString("snapshot_endpoint", endpoint).apply()
+                snapshot
+            } finally { connection.disconnect() }
         } catch (_: Exception) { cached }
     }
 }
