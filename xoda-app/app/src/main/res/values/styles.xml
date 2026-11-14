@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.Xoda" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#FAFAFA</item>
+        <item name="android:navigationBarColor">#FAFAFA</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+    <color name="icon_bg">#090A0D</color>
+</resources>
