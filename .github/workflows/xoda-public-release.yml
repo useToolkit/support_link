@@ -1,0 +1,81 @@
+name: Publish XodaFace APK as public GitHub Release
+on:
+  push:
+    branches: [xoda-face-public-release]
+    paths:
+      - 'xoda-app/**'
+      - '.github/workflows/xoda-public-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build XodaFace release
+        shell: bash
+        working-directory: xoda-app
+        run: |
+          set -euo pipefail
+          bash ci/fetch-landmarker.sh
+          gradle --no-daemon :app:assembleRelease :app:lintDebug
+      - name: Sign installable APK and check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          PASSWORD="$(openssl rand -hex 30)"
+          keytool -genkeypair -noprompt -storetype PKCS12 \
+            -keystore "$RUNNER_TEMP/xodaface-release.jks" \
+            -storepass "$PASSWORD" -keypass "$PASSWORD" \
+            -alias xodaface -keyalg RSA -keysize 3072 -validity 3650 \
+            -dname 'CN=Xoda Face Test Release, OU=Android, O=Personal, C=KR'
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -f -P 16 4 \
+            xoda-app/app/build/outputs/apk/release/app-release-unsigned.apk \
+            dist/XodaFace-aligned.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
+            --ks "$RUNNER_TEMP/xodaface-release.jks" --ks-key-alias xodaface \
+            --ks-pass "pass:$PASSWORD" --key-pass "pass:$PASSWORD" \
+            --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
+            --out dist/XodaFace-3.1.0.apk dist/XodaFace-aligned.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify \
+            --verbose --print-certs dist/XodaFace-3.1.0.apk > dist/SIGNATURE-INFO.txt
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 -v 4 dist/XodaFace-3.1.0.apk
+          sha256sum dist/XodaFace-3.1.0.apk > dist/SHA256SUMS.txt
+          rm dist/XodaFace-aligned.apk "$RUNNER_TEMP/xodaface-release.jks"
+      - name: Publish public direct-download APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="xodaface-3.1.0-public"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              dist/XodaFace-3.1.0.apk dist/SHA256SUMS.txt \
+              --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" \
+              dist/XodaFace-3.1.0.apk dist/SHA256SUMS.txt \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "XodaFace 3.1.0 - 얼굴 크기와 중안부" \
+              --notes "Android alpha for face-size and brow-to-nose length controls. Independent implementation, not a pixel-identical SODA product. This GitHub build uses a NEW signing certificate; uninstall any existing Xoda signed by a different certificate before installing. Previous app data may be lost." \
+              --latest=false
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,assets \
+            --jq '{url:url,assets:[.assets[]|{name:name,url:url,size:size}]}'
